@@ -61,7 +61,15 @@ footer{text-align:center;padding:26px 14px;color:var(--mu)}
   <p class="mu">Support: <a href="tel:09133237159">09133237159</a> · <a href="tel:07082310604">07082310604</a></p></div>
  </section>
 
- <section id="v-auth" class="hid"><h2>Login / Sign up</h2><div class="panel"><input id="ae" type="email" placeholder="Email"><input id="ap" type="password" placeholder="Password (min 8 characters)"><button onclick="login()">Login</button> <button class="s" onclick="signup()">Create account</button><p class="mu" id="am"></p></div><button class="s" onclick="show('shop')">← Back</button></section>
+ <section id="v-auth" class="hid"><h2 id="at">Login</h2><div class="panel">
+  <div id="f-signup" class="hid"><input id="sf" placeholder="First name" autocomplete="given-name"><input id="sl" placeholder="Last name" autocomplete="family-name"><input id="sp" type="tel" placeholder="Phone number (optional)" autocomplete="tel"></div>
+  <input id="ae" type="email" placeholder="Email address" autocomplete="email">
+  <div id="f-code" class="hid"><input id="ac" inputmode="numeric" placeholder="Code from your email"></div>
+  <div id="f-pass"><input id="ap" type="password" placeholder="Password" autocomplete="current-password"></div>
+  <p class="mu" id="ah"></p>
+  <button id="ab" onclick="authGo()">Login</button>
+  <p class="mu"><a href="#" id="l-forgot" onclick="mode('forgot');return false">Forgot password?</a> <a href="#" id="l-sw" onclick="mode(AM==='login'?'signup':'login');return false">Create an account</a></p>
+  <p class="mu" id="am"></p></div><button class="s" onclick="show('shop')">← Back</button></section>
 
  <section id="v-cart" class="hid"><h2>Your Cart</h2><div class="panel" id="cartbox"></div><button class="s" onclick="show('shop')">← Keep shopping</button></section>
 
@@ -97,11 +105,31 @@ async function api(path,method='GET',body){
 const go=async(f,ok)=>{try{await f();if(ok)toast(ok)}catch(e){toast(e.message)}};
 const VIEWS=['shop','auth','cart','wallet','admin'];
 function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);if(v==='wallet'||v==='admin')loadPrivate();render()}
-function authBtn(){S.me?logout():show('auth')}
+function authBtn(){if(S.me)logout();else{mode('login');show('auth')}}
 function logout(){S.me=null;S.tok=null;try{localStorage.removeItem('dbm_tok')}catch(e){}render();show('shop');toast('Logged out')}
 const prof=()=>S.me&&S.me.profile;const isAdmin=()=>!!(prof()&&prof().is_admin);
-async function login(){await go(async()=>{const j=await api('/api/auth/login','POST',{email:$('ae').value,password:$('ap').value});S.tok=j.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(e){}await loadMe();show('shop')},'Logged in')}
-async function signup(){await go(async()=>{const j=await api('/api/auth/signup','POST',{email:$('ae').value,password:$('ap').value});$('am').textContent=j.message})}
+let AM='login';
+const pwOk=p=>p.length>=8&&/[A-Za-z]/.test(p)&&/\d/.test(p);
+function mode(m,msg){AM=m;const v={login:['f-pass'],signup:['f-signup','f-pass'],forgot:[],reset:['f-code','f-pass']}[m];
+ ['f-signup','f-code','f-pass'].forEach(i=>$(i).classList.toggle('hid',!v.includes(i)));
+ $('at').textContent={login:'Login',signup:'Create account',forgot:'Forgot password',reset:'Reset password'}[m];
+ $('ab').textContent={login:'Login',signup:'Create account',forgot:'Send code',reset:'Reset password'}[m];
+ $('ap').placeholder=m==='reset'?'New password':'Password';
+ $('ah').textContent=(m==='signup'||m==='reset')?'Password: at least 8 characters, with letters and numbers.':'';
+ $('l-forgot').classList.toggle('hid',m!=='login');
+ $('l-sw').textContent=m==='login'?'Create an account':'Back to login';
+ $('am').textContent=msg||''}
+function authGo(){
+ const e=$('ae').value.trim(),p=$('ap').value;
+ if(AM==='login')return login();
+ if(AM==='signup'){const f=$('sf').value.trim(),l=$('sl').value.trim();
+  if(!f||!l)return toast('Enter your first and last name');
+  if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
+  return go(async()=>{const j=await api('/api/auth/signup','POST',{first_name:f,last_name:l,phone:$('sp').value.trim(),email:e,password:p});$('ap').value='';mode('login',j.message)},'Account created')}
+ if(AM==='forgot')return go(async()=>{const j=await api('/api/auth/forgot','POST',{email:e});mode('reset',j.message);$('ae').value=e},'Code sent');
+ if(AM==='reset'){if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
+  return go(async()=>{const j=await api('/api/auth/reset','POST',{email:e,code:$('ac').value.trim(),password:p});$('ap').value='';$('ac').value='';mode('login',j.message)},'Password changed')}}
+async function login(){await go(async()=>{const j=await api('/api/auth/login','POST',{email:$('ae').value.trim(),password:$('ap').value});S.tok=j.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(e){}await loadMe();show('shop')},'Logged in')}
 async function loadMe(){try{S.me=await api('/api/me')}catch(e){S.me=null;S.tok=null}render()}
 async function loadPublic(){try{const [c,p]=await Promise.all([api('/api/categories'),api('/api/products')]);S.C=c.categories;S.P=p.products}catch(e){toast('Could not reach the store server')}render()}
 async function loadPrivate(){if(!S.me)return;try{const [d,o]=await Promise.all([api('/api/deposits'),api('/api/orders')]);S.dep=d.deposits;S.ord=o.orders;
@@ -110,7 +138,7 @@ async function refresh(){await Promise.all([loadPublic(),loadPrivate(),loadMe()]
 function render(){
  $('cc').textContent=Object.values(S.cart).reduce((a,b)=>a+b,0);
  $('lb').textContent=S.me?'Logout':'Login';
- const b=$('bal');b.classList.toggle('hid',!S.me);b.textContent='Balance '+N(prof()&&prof().balance);
+ const b=$('bal');b.classList.toggle('hid',!S.me);b.textContent=((prof()&&prof().first_name)?prof().first_name+' · ':'')+'Balance '+N(prof()&&prof().balance);
  $('admb').classList.toggle('hid',!isAdmin());
  $('chips').innerHTML=[{id:'all',name:'All'},...S.C].map(c=>`<button class="chip ${S.cat===c.id?'on':''}" onclick="S.cat='${esc(c.id)}';render()">${esc(c.name)}</button>`).join('');
  const L=S.P.filter(p=>S.cat==='all'||p.category_id===S.cat);
@@ -144,5 +172,5 @@ function addC(){const n=$('cn').value.trim();if(n)go(async()=>{await api('/api/a
 function delC(id){if(confirm('Delete category?'))go(async()=>{await api('/api/admin/categories/'+id,'DELETE');await done()})}
 function dep2(id,a){go(async()=>{await api(`/api/admin/deposits/${id}/${a}`,'POST');await Promise.all([loadPrivate(),loadMe()])})}
 function deliv(id){go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT');await loadPrivate()})}
-render();loadPublic();if(S.tok)loadMe();
+mode('login');render();loadPublic();if(S.tok)loadMe();
 </script></body></html>
