@@ -30,6 +30,7 @@ input,select{width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:9;max-width:90%}
 footer{text-align:center;padding:26px 14px;color:var(--mu)}
 .hid{display:none}
+body.in .hero{display:none}
 </style></head><body>
 <header>
  <div class="logo">🛒 DeeBlaq’s Market</div>
@@ -44,6 +45,7 @@ footer{text-align:center;padding:26px 14px;color:var(--mu)}
 <a class="btn g" href="https://wa.me/2349133237159" target="_blank" rel="noopener">💬 Order via WhatsApp (09133237159)</a></div>
 <main>
  <section id="v-shop">
+  <div id="welcome" class="panel hid"></div>
   <h2>Products</h2><div class="chips" id="chips"></div><div class="grid" id="grid"></div>
   <div class="panel"><b>🧩 Custom Orders</b><br>Need something specific? We source it for you. <a href="https://wa.me/2349133237159?text=Hi%20DeeBlaq%27s%20Market%2C%20I%20need%20a%20custom%20order" target="_blank" rel="noopener">Tell us what you need</a>.</div>
   <h2>🔒 The Security Guarantee</h2>
@@ -125,7 +127,7 @@ function authGo(){
  if(AM==='signup'){const f=$('sf').value.trim(),l=$('sl').value.trim();
   if(!f||!l)return toast('Enter your first and last name');
   if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
-  return go(async()=>{const j=await api('/api/auth/signup','POST',{first_name:f,last_name:l,phone:$('sp').value.trim(),email:e,password:p});$('ap').value='';mode('login',j.message)},'Account created')}
+  return go(async()=>{await api('/api/auth/signup','POST',{first_name:f,last_name:l,phone:$('sp').value.trim(),email:e,password:p});const t=await api('/api/auth/login','POST',{email:e,password:p});S.tok=t.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(x){}$('ap').value='';await loadMe();show('shop')},'Welcome to DeeBlaq’s Market!')}
  if(AM==='forgot')return go(async()=>{const j=await api('/api/auth/forgot','POST',{email:e});mode('reset',j.message);$('ae').value=e},'Code sent');
  if(AM==='reset'){if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
   return go(async()=>{const j=await api('/api/auth/reset','POST',{email:e,code:$('ac').value.trim(),password:p});$('ap').value='';$('ac').value='';mode('login',j.message)},'Password changed')}}
@@ -138,6 +140,8 @@ async function refresh(){await Promise.all([loadPublic(),loadPrivate(),loadMe()]
 function render(){
  $('cc').textContent=Object.values(S.cart).reduce((a,b)=>a+b,0);
  $('lb').textContent=S.me?'Logout':'Login';
+ document.body.classList.toggle('in',!!S.me);
+ const wl=$('welcome');wl.classList.toggle('hid',!S.me);if(S.me)wl.innerHTML='<b>Welcome'+((prof()&&prof().first_name)?', '+esc(prof().first_name):'')+' 👋</b><br><span class="mu">Browse our categories and prices below.</span>';
  const b=$('bal');b.classList.toggle('hid',!S.me);b.textContent=((prof()&&prof().first_name)?prof().first_name+' · ':'')+'Balance '+N(prof()&&prof().balance);
  $('admb').classList.toggle('hid',!isAdmin());
  $('chips').innerHTML=[{id:'all',name:'All'},...S.C].map(c=>`<button class="chip ${S.cat===c.id?'on':''}" onclick="S.cat='${esc(c.id)}';render()">${esc(c.name)}</button>`).join('');
