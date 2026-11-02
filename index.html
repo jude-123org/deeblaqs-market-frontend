@@ -45,8 +45,11 @@ body.in .hero{display:none}
 <a class="btn g" href="https://wa.me/2349133237159" target="_blank" rel="noopener">💬 Order via WhatsApp (09133237159)</a></div>
 <main>
  <section id="v-shop">
+  <div id="gate" class="panel"><b>🔐 Members only</b><p>Create a free account or log in to see our products, categories and prices.</p><button onclick="mode('signup');show('auth')">Create account</button> <button class="s" onclick="mode('login');show('auth')">Login</button></div>
+  <div id="catalog" class="hid">
   <div id="welcome" class="panel hid"></div>
   <h2>Products</h2><div class="chips" id="chips"></div><div class="grid" id="grid"></div>
+  </div>
   <div class="panel"><b>🧩 Custom Orders</b><br>Need something specific? We source it for you. <a href="https://wa.me/2349133237159?text=Hi%20DeeBlaq%27s%20Market%2C%20I%20need%20a%20custom%20order" target="_blank" rel="noopener">Tell us what you need</a>.</div>
   <h2>🔒 The Security Guarantee</h2>
   <div class="two">
@@ -103,12 +106,12 @@ try{S.tok=localStorage.getItem('dbm_tok')}catch(e){}
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3000)}
 async function api(path,method='GET',body){
  const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(S.tok?{Authorization:'Bearer '+S.tok}:{})},body:body?JSON.stringify(body):undefined});
- const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Request failed');return j}
+ const j=await r.json().catch(()=>({}));if(r.status===401&&S.tok){S.tok=null;S.me=null;try{localStorage.removeItem('dbm_tok')}catch(e){}render()}if(!r.ok)throw new Error(j.error||'Request failed');return j}
 const go=async(f,ok)=>{try{await f();if(ok)toast(ok)}catch(e){toast(e.message)}};
 const VIEWS=['shop','auth','cart','wallet','admin'];
 function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);if(v==='wallet'||v==='admin')loadPrivate();render()}
 function authBtn(){if(S.me)logout();else{mode('login');show('auth')}}
-function logout(){S.me=null;S.tok=null;try{localStorage.removeItem('dbm_tok')}catch(e){}render();show('shop');toast('Logged out')}
+function logout(){S.me=null;S.tok=null;S.P=[];S.C=[];S.cart={};S.AP=[];try{localStorage.removeItem('dbm_tok')}catch(e){}render();show('shop');toast('Logged out')}
 const prof=()=>S.me&&S.me.profile;const isAdmin=()=>!!(prof()&&prof().is_admin);
 let AM='login';
 const pwOk=p=>p.length>=8&&/[A-Za-z]/.test(p)&&/\d/.test(p);
@@ -132,12 +135,14 @@ function authGo(){
  if(AM==='reset'){if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
   return go(async()=>{const j=await api('/api/auth/reset','POST',{email:e,code:$('ac').value.trim(),password:p});$('ap').value='';$('ac').value='';mode('login',j.message)},'Password changed')}}
 async function login(){await go(async()=>{const j=await api('/api/auth/login','POST',{email:$('ae').value.trim(),password:$('ap').value});S.tok=j.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(e){}await loadMe();show('shop')},'Logged in')}
-async function loadMe(){try{S.me=await api('/api/me')}catch(e){S.me=null;S.tok=null}render()}
-async function loadPublic(){try{const [c,p]=await Promise.all([api('/api/categories'),api('/api/products')]);S.C=c.categories;S.P=p.products}catch(e){toast('Could not reach the store server')}render()}
+async function loadMe(){try{S.me=await api('/api/me')}catch(e){S.me=null;S.tok=null}render();if(S.me)await loadPublic()}
+async function loadPublic(){if(!S.me)return;try{const [c,p]=await Promise.all([api('/api/categories'),api('/api/products')]);S.C=c.categories;S.P=p.products;S.loaded=true}catch(e){toast('Could not reach the store server')}render()}
 async function loadPrivate(){if(!S.me)return;try{const [d,o]=await Promise.all([api('/api/deposits'),api('/api/orders')]);S.dep=d.deposits;S.ord=o.orders;
  if(isAdmin()){const [ap,ad,ao]=await Promise.all([api('/api/admin/products'),api('/api/admin/deposits'),api('/api/admin/orders')]);S.AP=ap.products;S.adep=ad.deposits;S.aord=ao.orders}}catch(e){toast(e.message)}render()}
 async function refresh(){await Promise.all([loadPublic(),loadPrivate(),loadMe()])}
 function render(){
+ if(S.loaded)Object.keys(S.cart).forEach(i=>{if(!S.P.find(p=>p.id===i))delete S.cart[i]});
+ $('catalog').classList.toggle('hid',!S.me);$('gate').classList.toggle('hid',!!S.me);
  $('cc').textContent=Object.values(S.cart).reduce((a,b)=>a+b,0);
  $('lb').textContent=S.me?'Logout':'Login';
  document.body.classList.toggle('in',!!S.me);
@@ -161,7 +166,7 @@ function renderAdmin(){
  $('olist').innerHTML=S.aord.map(o=>`<div class="row"><span>${esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))} · ${N(o.total)} <span class="tag">${esc(o.status)}</span></span>${o.status!=='delivered'?`<button class="sm" onclick="deliv('${o.id}')">Mark delivered</button>`:''}</div>`).join('')||'<p class="mu">None.</p>';
 }
 const done=async()=>{await Promise.all([loadPublic(),loadPrivate()])};
-function add(id){S.cart[id]=(S.cart[id]||0)+1;toast('Added to cart');render()}
+function add(id){if(!S.me)return show('auth');S.cart[id]=(S.cart[id]||0)+1;toast('Added to cart');render()}
 function rm(id){delete S.cart[id];render()}
 function checkout(){if(!S.me){toast('Please log in to pay from your wallet');return show('auth')}
  go(async()=>{await api('/api/orders','POST',{items:Object.keys(S.cart).map(i=>({product_id:i,qty:S.cart[i]}))});S.cart={};await Promise.all([loadMe(),loadPrivate()]);show('wallet')},'Order placed! Delivery details will be sent to you.')}
@@ -176,5 +181,5 @@ function addC(){const n=$('cn').value.trim();if(n)go(async()=>{await api('/api/a
 function delC(id){if(confirm('Delete category?'))go(async()=>{await api('/api/admin/categories/'+id,'DELETE');await done()})}
 function dep2(id,a){go(async()=>{await api(`/api/admin/deposits/${id}/${a}`,'POST');await Promise.all([loadPrivate(),loadMe()])})}
 function deliv(id){go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT');await loadPrivate()})}
-mode('login');render();loadPublic();if(S.tok)loadMe();
+mode('login');render();if(S.tok)loadMe();
 </script></body></html>
