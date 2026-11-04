@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DeeBlaq’s Market</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#14161f;--mu:#6a6f80;--ac:#6d28d9;--ac2:#f59e0b;--bd:#e3e5ee;--ok:#16a34a;--er:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0f15;--card:#181a24;--tx:#eef0f6;--mu:#9a9fb2;--bd:#2a2d3b}}
+:root[data-theme="dark"]{--bg:#0e0f15;--card:#181a24;--tx:#eef0f6;--mu:#9a9fb2;--bd:#2a2d3b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:18px;flex:1;color:var(--ac)}
+button,.btn{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+button.s{background:var(--bd);color:var(--tx)}button.d{background:var(--er)}button.g{background:#25d366}
+button.sm{padding:5px 9px;font-size:13px}
+.hero{max-width:980px;margin:0 auto;padding:28px 18px 22px;background:radial-gradient(circle at 85% 75%,rgba(109,40,217,.16),transparent 55%)}
+.hero .badge{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--ac);border:1px solid var(--ac);background:transparent;padding:7px 14px;border-radius:99px}
+.hero h1{font-size:40px;line-height:1.05;margin:16px 0 12px;font-weight:900;color:var(--tx)}.red{color:var(--ac)}
+.hero p{color:var(--mu);font-size:16px;max-width:560px;margin:0 0 18px}
+.hb{display:flex;flex-direction:column;gap:10px;max-width:420px}
+.hb .btn,.hb button{text-align:center;padding:14px;border-radius:14px;font-size:16px}
+.red-btn{background:var(--ac);color:#fff}
+.btn-o{background:transparent;border:1.5px solid var(--bd);color:var(--tx)}
+.trust{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px;font-size:13px;font-weight:700;color:var(--tx)}
+main{max-width:980px;margin:0 auto;padding:16px}
+h2{margin:26px 0 10px;font-size:20px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}.chip{white-space:nowrap;background:var(--card);color:var(--tx);border:1px solid var(--bd)}.chip.on{background:var(--ac);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.card img,.ph{width:100%;height:130px;object-fit:cover;background:var(--bd);display:flex;align-items:center;justify-content:center;font-size:34px}
+.card .b{padding:10px 12px;display:flex;flex-direction:column;gap:6px;flex:1}.pr{font-weight:800;color:var(--ac)}.cat{font-size:12px;color:var(--mu)}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;margin:4px 0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.mu{color:var(--mu);font-size:13px}.tag{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--bd)}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:9;max-width:90%}
+footer{text-align:center;padding:26px 14px 160px;color:var(--mu)}
+.hid{display:none!important}
+.promos{display:grid;gap:14px;margin:6px 0 10px}
+.promo{border-radius:22px;padding:22px;color:#fff;background:linear-gradient(135deg,var(--ac),#4c1d95)}
+.promo .pt{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.12em;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);padding:6px 12px;border-radius:99px}
+.promo h3{margin:12px 0 6px;font-size:26px}.promo p{margin:0 0 16px;opacity:.92;max-width:380px}
+.promo button{background:#fff;color:var(--ac);border-radius:99px;padding:12px 20px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--ac);margin:30px 0 0}
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.why .panel{margin:0}.why .ic{font-size:26px;display:block;margin-bottom:6px}
+.marq{overflow:hidden}
+.track{display:flex;gap:12px;width:max-content;animation:dbmscroll var(--d,40s) linear infinite}
+.marq:hover .track{animation-play-state:paused}
+@keyframes dbmscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.marq{overflow-x:auto}.track{animation:none}}
+.rev{width:270px;flex:none;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px}
+.rev .st{color:#f59e0b;letter-spacing:2px}.rev p{margin:6px 0;color:var(--tx)}
+details.faq{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px 16px;margin:10px 0}
+details.faq summary{font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px}
+details.faq summary::-webkit-details-marker{display:none}
+details.faq summary::after{content:'⌄';color:var(--mu)}details.faq[open] summary::after{content:'⌃'}
+details.faq p{margin:10px 0 0;color:var(--mu)}
+.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#menu{position:fixed;inset:0;background:var(--bg);z-index:20;overflow-y:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 28px;display:none}
+#menu.on{display:block}
+.mtop{display:flex;gap:10px}.mtop button{flex:1;padding:14px;border-radius:14px}
+.mrow{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:16px;padding:12px 14px;margin:8px 0;text-align:left;font-size:16px}
+.mrow .i{width:40px;height:40px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px}
+.help{border-radius:24px;padding:26px 22px;color:#fff;text-align:center;background:linear-gradient(135deg,var(--ac),#4c1d95);margin:26px 0}
+.help .btn{display:block;width:100%;margin:10px 0;padding:14px;border-radius:99px;font-size:16px}
+.help .w{background:#fff;color:var(--ac)}.help .o{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff}
+.online{display:inline-flex;align-items:center;gap:8px;border:1px solid #86efac;background:rgba(34,197,94,.1);color:#16a34a;border-radius:99px;padding:8px 14px;font-weight:700;margin-bottom:18px}
+.online i{width:10px;height:10px;border-radius:50%;background:#22c55e;display:inline-block}
+.feats{max-width:980px;margin:0 auto;text-align:left}
+.feat{display:flex;align-items:center;gap:14px;padding:10px 0}
+.feat .ft{width:64px;height:64px;flex:none;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(109,40,217,.12)}
+.feat b{display:block;font-size:17px;color:var(--tx)}.feat span{color:var(--mu)}
+.fline{border-top:1px solid var(--bd);margin:14px 0}
+.fbottom{max-width:980px;margin:0 auto;text-align:left}
+.fbottom .links{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}.fbottom .links a{color:var(--mu);font-weight:600;text-decoration:none}
+.fcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:18px;text-align:left;margin-bottom:18px}
+.fcols h4{letter-spacing:.14em;font-size:12px;margin:0 0 8px;color:var(--tx)}
+.fcols a{display:block;color:var(--mu);padding:5px 0;text-decoration:none}
+.fab{position:fixed;right:14px;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:8;text-decoration:none}
+.fab::after{content:'';position:absolute;right:1px;bottom:1px;width:13px;height:13px;border-radius:50%;background:#34d399;border:2px solid #fff}
+.fab svg{width:28px;height:28px;fill:#fff}
+#fb-wa{bottom:calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(135deg,#25d366,#0d7a52);box-shadow:0 10px 28px rgba(37,211,102,.45)}
+#fb-tg{bottom:calc(84px + env(safe-area-inset-bottom,0px));background:linear-gradient(135deg,#2aabee,#1c7fc0);box-shadow:0 10px 28px rgba(42,171,238,.45)}
+#theme{position:fixed;right:14px;bottom:calc(154px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;padding:0;font-size:22px;background:var(--card);color:var(--tx);border:1px solid var(--bd);box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:8}
+body.in .hero{display:none}
+</style></head><body>
+<header>
+ <div class="logo">🛒 DeeBlaq’s Market</div>
+ <span id="bal" class="tag hid"></span>
+ <button class="s sm" onclick="show('cart')">🧺 Cart (<span id="cc">0</span>)</button>
+ <button class="s sm" onclick="openMenu()" aria-label="Menu">☰ Menu</button>
+</header>
+<div id="menu"><div class="mhead"><div class="logo">🛒 DeeBlaq’s Market</div><button class="s sm" onclick="closeMenu()">✕ Close</button></div>
+<div class="panel mtop"><button class="s" id="lb" onclick="closeMenu();authBtn()">Login</button><button id="sb" onclick="closeMenu();mode('signup');show('auth')">Sign Up</button></div>
+<button class="mrow" onclick="nav('home')"><span class="i">🏠</span>Home</button>
+<button class="mrow" onclick="nav('market')"><span class="i">🛍️</span>Marketplace</button>
+<button class="mrow" onclick="nav('numbers')"><span class="i">📱</span>Phone Numbers</button>
+<button class="mrow" onclick="nav('social')"><span class="i">🚀</span>Social Boost</button>
+<button class="mrow" onclick="nav('tools')"><span class="i">🛠️</span>Tools &amp; Subscriptions</button>
+<button class="mrow" onclick="nav('wallet')"><span class="i">₦</span>Wallet</button>
+<button class="mrow" onclick="nav('faq')"><span class="i">❓</span>FAQ</button>
+<button class="mrow" onclick="nav('support')"><span class="i">🎧</span>Support</button>
+<button class="mrow hid" id="admb" onclick="nav('admin')"><span class="i">⚙️</span>Admin</button>
+</div>
+<div class="hero"><span class="badge">🔥 DIGITAL ACCOUNTS MARKETPLACE</span>
+<h1>Premium Digital Accounts <span class="red">&amp; Services</span></h1>
+<p>Browse verified digital accounts, ready-made channels and marketing services in one fast, secure marketplace. Compare options and order in a few clicks.</p>
+<div class="hb"><button class="red-btn" onclick="browse()">🛍️ Browse Marketplace →</button>
+<button class="btn-o" onclick="goCat('number')">📱 Buy Numbers →</button></div>
+<div class="trust"><span>🛡️ Verified Accounts</span><span>⚡ Fast Delivery</span><span>💬 24/7 Support</span></div></div>
+<main>
+ <section id="v-shop">
+  <div class="promos">
+   <div class="promo"><span class="pt">VERIFICATION · PHONE NUMBERS</span><h3>Buy Phone Numbers</h3><p>Get virtual numbers for account verification. See what is available and order in a few clicks.</p><button onclick="goCat('number')">📱 Explore Numbers →</button></div>
+   <div class="promo"><span class="pt">GROWTH · SOCIAL SERVICES</span><h3>Social Media Boost</h3><p>Grow your pages with followers, likes and views from our social services.</p><button onclick="goCat('social')">🚀 Explore Services →</button></div>
+   <div class="promo"><span class="pt">SUBSCRIPTIONS · RECHARGE</span><h3>Tools &amp; Subscriptions</h3><p>VPN, Netflix and other subscriptions, recharged for you. Every tool comes with a clear description of what it does.</p><button onclick="goCat('tool')">🛠️ Explore Tools →</button></div>
+  </div>
+  <div id="gate" class="panel"><b>🔐 Members only</b><p>Create a free account or log in to see our products, categories and prices.</p><button onclick="mode('signup');show('auth')">✨ Create account</button> <button class="s" onclick="mode('login');show('auth')">🔑 Login</button></div>
+  <div id="catalog" class="hid">
+  <div id="welcome" class="panel hid"></div>
+  <h2>Products</h2><div class="chips" id="chips"></div><div class="grid" id="grid"></div>
+  </div>
+  <div class="eyebrow">WHY CHOOSE DEEBLAQ’S MARKET?</div><h2 style="margin-top:6px">Fast, verified and easy to order.</h2>
+  <div class="why">
+   <div class="panel"><span class="ic">⚡</span>Fast delivery once your payment is confirmed.</div>
+   <div class="panel"><span class="ic">🛡️</span>Every account is hand-checked before delivery.</div>
+   <div class="panel"><span class="ic">💬</span>Help on WhatsApp whenever you need it, 24/7.</div>
+   <div class="panel"><span class="ic">⭐</span>Accounts, channels and services in one marketplace.</div>
+  </div>
+  <div class="eyebrow">WHAT OUR CUSTOMERS SAY</div><h2 style="margin-top:6px">Customer feedback</h2>
+  <div id="revs" class="hid"></div>
+  <div class="eyebrow" id="faq">HELP CENTER</div><h2 style="margin-top:6px">Frequently asked questions</h2>
+  <p class="mu">Quick answers to the most common questions about DeeBlaq’s Market.</p>
+  <details class="faq"><summary>How do I place an order?</summary><p>Create a free account and log in. Add money to your wallet, put the product you want in your cart, then tap Pay from wallet.</p></details>
+  <details class="faq"><summary>How do I fund my wallet?</summary><p>Open Wallet, send your payment to the bank account shown there, then enter the amount and your payment reference and tap Submit deposit. Once we confirm it, your balance updates.</p></details>
+  <details class="faq"><summary>How do I receive my order?</summary><p>After you pay, your order appears under My orders in your Wallet. We send your delivery details to you and mark the order as delivered.</p></details>
+  <details class="faq"><summary>Can I get help before ordering?</summary><p>Yes. Message us on WhatsApp at 09133237159 or call 09133237159 or 07082310604. We are available 24/7.</p></details>
+  <details class="faq"><summary>What if I have a problem with my order?</summary><p>If an account fails to log in within the first 24 hours, we offer a one-time replacement. Tell us on WhatsApp as soon as it happens.</p></details>
+  <details class="faq"><summary>Can I get a refund?</summary><p>Because these are digital assets, refunds are not provided once login details have been sent. The 24-hour replacement policy still applies.</p></details>
+  <details class="faq"><summary>Where can I see my orders?</summary><p>Log in and open Wallet. Your deposits, balance and orders are all listed there.</p></details>
+  <details class="faq"><summary>Can I order something that is not listed?</summary><p>Yes. Use Custom Orders and tell us what you need. We source it for you.</p></details>
+  <div id="support" class="help"><div style="font-size:34px">🎧</div><div class="eyebrow" style="color:#fff;opacity:.8;margin:6px 0 0">DEEBLAQ’S MARKET SUPPORT</div><h2 style="margin:6px 0">Need a little help?</h2><p style="opacity:.92;margin:0 0 14px">Have a question about your account, an order or one of our services? We are available 24/7.</p>
+   <select id="ri"><option>Login problem</option><option>Deposit or wallet</option><option>Order not delivered</option><option>Replacement request</option><option>Other</option></select>
+   <textarea id="rd" rows="3" placeholder="What happened? Add order details, amount or payment reference."></textarea>
+   <button class="btn w" id="b-tg" onclick="report('tg')">✈️ Report on Telegram</button>
+   <button class="btn w" onclick="report('wa')">💬 Report on WhatsApp</button>
+   <button class="btn o" id="b-mail" onclick="report('mail')">✉️ Report by Email</button>
+   <a class="btn o" href="tel:09133237159">📞 Call 09133237159</a><a class="btn o" href="tel:07082310604">📞 Call 07082310604</a>
+   <div style="opacity:.9;font-size:13px">✓ Account assistance &nbsp; ✓ Order support &nbsp; ✓ Service questions</div></div>
+  <details class="faq" id="terms"><summary>📄 Terms of Service</summary>
+   <p><b>1. Your account.</b> Create an account with correct details and keep your password private. You are responsible for activity on your account.</p>
+   <p><b>2. Orders and delivery.</b> Orders are paid from your wallet balance. Give correct details in the order note, for example the email or number to recharge or subscribe. We deliver after payment and mark the order as delivered.</p>
+   <p><b>3. Wallet.</b> Deposits are added after we confirm your payment. If a deposit has a problem, contact support with your payment reference.</p>
+   <p><b>4. Subscriptions and recharges.</b> The duration and details are shown on each product. Third-party services such as VPNs and streaming platforms are run by their own companies, and we cannot control changes they make.</p>
+   <p><b>5. Refunds and replacements.</b> All sales are final once login details are sent. If an account fails to log in within the first 24 hours, we offer a one-time replacement.</p>
+   <p><b>6. Your responsibility.</b> Buyers must follow each platform's guidelines after a successful login.</p>
+   <p><b>7. Support and changes.</b> Reach us any time on WhatsApp, Telegram or email. We may update these terms, and the latest version is always on this page.</p></details>
+  <div class="panel"><b>🧩 Custom Orders</b><br>Need something specific? We source it for you. <a href="https://wa.me/2349133237159?text=Hi%20DeeBlaq%27s%20Market%2C%20I%20need%20a%20custom%20order" target="_blank" rel="noopener">Tell us what you need</a>.</div>
+  <h2>🔒 The Security Guarantee</h2>
+  <div class="two">
+   <div class="panel"><b>✅ Verified Only</b><br>Every account is hand-checked before delivery.</div>
+   <div class="panel"><b>🔑 Login Guarantee</b><br>We provide a 24-hour replacement window if you encounter any login issues.</div>
+   <div class="panel"><b>🤝 No Middlemen</b><br>You are dealing directly with DeeBlaq’s Market. 100% Transparency.</div>
+  </div>
+  <h2 id="policy">Refund &amp; Replacement Policy</h2>
+  <div class="panel"><p><b>Final Sale:</b> Due to the nature of digital assets, refunds are not provided once login details are sent.</p>
+  <p><b>Replacement Policy:</b> We offer a one-time replacement for any account that fails to log in within the first 24 hours.</p>
+  <p style="margin:0"><b>User Responsibility:</b> Buyers are responsible for following platform guidelines after a successful login.</p></div>
+  <h2 id="contact">Contact &amp; Order</h2>
+  <div class="panel"><a class="btn g" href="https://wa.me/2349133237159" target="_blank" rel="noopener">💬 Order via WhatsApp (09133237159)</a>
+  <p class="mu">Support: <a href="tel:09133237159">09133237159</a> · <a href="tel:07082310604">07082310604</a></p></div>
+ </section>
+
+ <section id="v-auth" class="hid"><h2 id="at">Login</h2><div class="panel">
+  <div id="f-signup" class="hid"><input id="sf" placeholder="First name" autocomplete="given-name"><input id="sl" placeholder="Last name" autocomplete="family-name"><input id="sp" type="tel" placeholder="Phone number (optional)" autocomplete="tel"></div>
+  <input id="ae" type="email" placeholder="Email address" autocomplete="email">
+  <div id="f-code" class="hid"><input id="ac" inputmode="numeric" placeholder="Code from your email"></div>
+  <div id="f-pass"><input id="ap" type="password" placeholder="Password" autocomplete="current-password"></div>
+  <p class="mu" id="ah"></p>
+  <button id="ab" onclick="authGo()">Login</button>
+  <p class="mu"><a href="#" id="l-forgot" onclick="mode('forgot');return false">Forgot password?</a> <a href="#" id="l-sw" onclick="mode(AM==='login'?'signup':'login');return false">Create an account</a></p>
+  <p class="mu" id="am"></p></div><button class="s" onclick="show('shop')">← Back</button></section>
+
+ <section id="v-cart" class="hid"><h2>Your Cart</h2><div class="panel" id="cartbox"></div><button class="s" onclick="show('shop')">← Keep shopping</button></section>
+
+ <section id="v-wallet" class="hid"><h2>My Wallet &amp; Orders</h2>
+  <div class="panel" id="walbox"></div><button class="s" onclick="show('shop')">← Back</button></section>
+
+ <section id="v-admin" class="hid"><h2>Admin Dashboard</h2>
+  <div class="two">
+   <div class="panel"><b id="pt">Add product</b>
+    <input id="pn" placeholder="Product name"><input id="pp" type="number" min="0" placeholder="Price (₦)">
+    <input id="pi" placeholder="Image URL (https://…)"><select id="pc"></select>
+    <textarea id="pl" rows="3" placeholder="Plans (optional). One per line: 1 month | 3500"></textarea>
+    <textarea id="pd" rows="3" placeholder="Describe what it does and what the customer gets (optional)"></textarea>
+    <button onclick="saveP()">Save product</button> <button class="s" onclick="clrP()">Clear</button></div>
+   <div class="panel"><b>Categories</b><input id="cn" placeholder="New category name"><button onclick="addC()">Add category</button><div id="clist"></div></div>
+  </div>
+  <div class="panel"><b>Products</b><div id="plist"></div></div>
+  <div class="panel"><b>Deposit requests</b><div id="dlist"></div></div>
+  <div class="panel"><b>Orders</b><div id="olist"></div></div>
+  <div class="panel"><b>Customer feedback</b><p class="mu">Only add real feedback that your customers gave you.</p><input id="rn" placeholder="Customer name"><input id="rm" placeholder="What the customer said"><select id="rr"><option>5</option><option>4</option><option>3</option></select><button onclick="addR()">Add feedback</button><div id="rlist"></div></div>
+  <button class="s" onclick="show('shop')">← Back to store</button></section>
+</main>
+<footer><div class="online"><i></i>Marketplace Online</div>
+<div class="fcols">
+ <div><h4>EXPLORE</h4><a href="#" onclick="nav('home');return false">Home</a><a href="#" onclick="nav('market');return false">Marketplace</a><a href="#" onclick="nav('wallet');return false">Wallet</a><a href="#" onclick="nav('faq');return false">FAQ</a><a href="#" onclick="nav('contact');return false">Contact</a></div>
+ <div><h4>SERVICES</h4><a href="#" onclick="nav('market');return false">Digital Accounts</a><a href="#" onclick="nav('numbers');return false">Buy Numbers</a><a href="#" onclick="nav('social');return false">Social Boost</a><a href="#" onclick="nav('tools');return false">Tools</a></div>
+ <div><h4>SUPPORT</h4><a href="#" onclick="nav('support');return false">Help Center</a><a href="#" onclick="nav('faq');return false">FAQ</a><a href="#" onclick="nav('policy');return false">Refund Policy</a><a href="#" onclick="nav('terms');return false">Terms of Service</a></div>
+</div>
+<div class="feats"><div class="fline"></div>
+ <div class="feat"><div class="ft">⚡</div><div><b>Fast Delivery</b><span>Get your order quickly</span></div></div>
+ <div class="feat"><div class="ft">🔒</div><div><b>Secure Checkout</b><span>Pay from your wallet and track every order</span></div></div>
+ <div class="feat"><div class="ft">🎧</div><div><b>Customer Support</b><span>We’re here when you need us, 24/7</span></div></div>
+ <div class="fline"></div></div>
+<div class="fbottom"><div>© <span id="yr"></span> DeeBlaq’s Market. All rights reserved.</div>
+ <div>Digital Accounts Marketplace &amp; Online Services</div>
+ <div class="links"><a href="#" onclick="nav('policy');return false">Policy</a><a href="#" onclick="nav('terms');return false">Terms</a><a href="#" onclick="nav('faq');return false">FAQ</a><a href="#" onclick="nav('support');return false">Support</a></div></div></footer>
+<a id="fb-tg" class="fab hid" href="#" target="_blank" rel="noopener" aria-label="Chat on Telegram"><svg viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></a>
+<a id="fb-wa" class="fab" href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg viewBox="0 0 24 24"><path d="M12.04 2a9.93 9.93 0 0 0-8.5 15.03L2 22l5.1-1.5A9.94 9.94 0 1 0 12.04 2zm0 18.2a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-3.02.88.9-2.94-.2-.31a8.2 8.2 0 1 1 6.8 3.69zm4.5-6.14c-.25-.12-1.46-.72-1.69-.8-.23-.09-.39-.12-.56.12-.16.25-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.04-.38-1.98-1.22-.73-.65-1.23-1.46-1.37-1.71-.14-.25-.02-.38.1-.5.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07s.89 2.4 1.01 2.56c.12.17 1.75 2.67 4.23 3.74.59.25 1.05.4 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.2-.58.2-1.07.14-1.18-.06-.1-.23-.16-.48-.29z"/></svg></a>
+<button id="theme" onclick="toggleTheme()" aria-label="Switch dark or light mode">🌙</button>
+<div id="toast"></div>
+<script>
+const API="https://deeblaqs-market-new-backend.onrender.com";
+const $=id=>document.getElementById(id),N=n=>'₦'+Number(n||0).toLocaleString();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const S={P:[],C:[],AP:[],dep:[],ord:[],adep:[],aord:[],R:[],sel:{},cart:{},cat:'all',edit:null,me:null,tok:null};
+try{S.tok=localStorage.getItem('dbm_tok')}catch(e){}
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3000)}
+async function api(path,method='GET',body){
+ const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(S.tok?{Authorization:'Bearer '+S.tok}:{})},body:body?JSON.stringify(body):undefined});
+ const j=await r.json().catch(()=>({}));if(r.status===401&&S.tok){S.tok=null;S.me=null;try{localStorage.removeItem('dbm_tok')}catch(e){}render()}if(!r.ok)throw new Error(j.error||'Request failed');return j}
+const go=async(f,ok)=>{try{await f();if(ok)toast(ok)}catch(e){toast(e.message)}};
+const VIEWS=['shop','auth','cart','wallet','admin'];
+function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);if(v==='wallet'||v==='admin')loadPrivate();render()}
+async function loadReviews(){try{const j=await api('/api/reviews');S.R=j.reviews}catch(e){}render()}
+function addR(){go(async()=>{await api('/api/admin/reviews','POST',{name:$('rn').value,message:$('rm').value,rating:$('rr').value});$('rn').value='';$('rm').value='';await loadReviews()},'Feedback added')}
+function delR(id){if(confirm('Delete this feedback?'))go(async()=>{await api('/api/admin/reviews/'+id,'DELETE');await loadReviews()})}
+function goCat(k){
+ if(!S.me){mode('signup');show('auth');toast('Create an account to browse');return}
+ show('shop');const KEYS={tool:['tool','subscri','vpn','netflix','stream']};const ks=KEYS[k]||[k];const c=S.C.find(x=>ks.some(y=>String(x.name).toLowerCase().includes(y)));
+ if(c){S.cat=String(c.id);render();$('catalog').scrollIntoView({behavior:'smooth'})}
+ else{toast('Not listed yet. Ask us on WhatsApp');window.open('https://wa.me/2349133237159?text='+encodeURIComponent('Hi DeeBlaq’s Market, I am looking for '+k),'_blank')}}
+function themeNow(){return document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);$('theme').textContent=t==='dark'?'☀️':'🌙';try{localStorage.setItem('dbm_theme',t)}catch(e){}}
+function toggleTheme(){setTheme(themeNow()==='dark'?'light':'dark')}
+const BANK={name:'UNITED BANK OF AFRICA (UBA)',no:'2296102813',holder:'OSARODION JUDE OSAMAMWONDE'};
+function copyAcct(){try{navigator.clipboard.writeText(BANK.no).then(()=>toast('Account number copied')).catch(()=>toast('Could not copy. Hold the number to copy it.'))}catch(e){toast('Could not copy. Hold the number to copy it.')}}
+const SUP={wa:'2349133237159',tg:'deeblaqsmarketsupport',mail:'Deeblaqsmarkets@gmail.com'}; /* put your Telegram username (no @) and support email here */
+function report(k){
+ const t='Hi DeeBlaq’s Market, I need help.\nIssue: '+$('ri').value+'\nAccount: '+(prof()?prof().email:'not logged in')+'\nDetails: '+($('rd').value.trim()||'-');
+ const q=encodeURIComponent(t);
+ if(k==='wa')window.open('https://wa.me/'+SUP.wa+'?text='+q,'_blank');
+ else if(k==='tg')window.open('https://t.me/'+SUP.tg+'?text='+q,'_blank');
+ else location.href='mailto:'+SUP.mail+'?subject='+encodeURIComponent('Support: '+$('ri').value)+'&body='+q}
+function openMenu(){$('menu').classList.add('on')}
+function closeMenu(){$('menu').classList.remove('on')}
+function jump(id){show('shop');setTimeout(()=>{const e=$(id);if(e)e.scrollIntoView({behavior:'smooth'})},60)}
+function nav(x){closeMenu();
+ if(x==='home'){show('shop');scrollTo(0,0)}
+ else if(x==='market')browse();
+ else if(x==='numbers')goCat('number');
+ else if(x==='social')goCat('social');
+ else if(x==='tools')goCat('tool');
+ else if(x==='wallet')show('wallet');
+ else if(x==='admin')show('admin');
+ else jump({faq:'faq',support:'support',policy:'policy',contact:'contact',terms:'terms'}[x]||'faq')}
+function browse(){if(S.me){show('shop');setTimeout(()=>$('catalog').scrollIntoView({behavior:'smooth'}),60)}else{mode('signup');show('auth')}}
+function authBtn(){if(S.me)logout();else{mode('login');show('auth')}}
+function logout(){S.me=null;S.tok=null;S.P=[];S.C=[];S.cart={};S.AP=[];try{localStorage.removeItem('dbm_tok')}catch(e){}render();show('shop');toast('Logged out')}
+const prof=()=>S.me&&S.me.profile;const isAdmin=()=>!!(prof()&&prof().is_admin);
+let AM='login';
+const pwOk=p=>p.length>=8&&/[A-Za-z]/.test(p)&&/\d/.test(p);
+function mode(m,msg){AM=m;const v={login:['f-pass'],signup:['f-signup','f-pass'],forgot:[],reset:['f-code','f-pass']}[m];
+ ['f-signup','f-code','f-pass'].forEach(i=>$(i).classList.toggle('hid',!v.includes(i)));
+ $('at').textContent={login:'Login',signup:'Create account',forgot:'Forgot password',reset:'Reset password'}[m];
+ $('ab').textContent={login:'Login',signup:'Create account',forgot:'Send code',reset:'Reset password'}[m];
+ $('ap').placeholder=m==='reset'?'New password':'Password';
+ $('ah').textContent=(m==='signup'||m==='reset')?'Password: at least 8 characters, with letters and numbers.':'';
+ $('l-forgot').classList.toggle('hid',m!=='login');
+ $('l-sw').textContent=m==='login'?'Create an account':'Back to login';
+ $('am').textContent=msg||''}
+function authGo(){
+ const e=$('ae').value.trim(),p=$('ap').value;
+ if(AM==='login')return login();
+ if(AM==='signup'){const f=$('sf').value.trim(),l=$('sl').value.trim();
+  if(!f||!l)return toast('Enter your first and last name');
+  if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
+  return go(async()=>{await api('/api/auth/signup','POST',{first_name:f,last_name:l,phone:$('sp').value.trim(),email:e,password:p});const t=await api('/api/auth/login','POST',{email:e,password:p});S.tok=t.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(x){}$('ap').value='';await loadMe();show('shop')},'Welcome to DeeBlaq’s Market!')}
+ if(AM==='forgot')return go(async()=>{const j=await api('/api/auth/forgot','POST',{email:e});mode('reset',j.message);$('ae').value=e},'Code sent');
+ if(AM==='reset'){if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
+  return go(async()=>{const j=await api('/api/auth/reset','POST',{email:e,code:$('ac').value.trim(),password:p});$('ap').value='';$('ac').value='';mode('login',j.message)},'Password changed')}}
+async function login(){await go(async()=>{const j=await api('/api/auth/login','POST',{email:$('ae').value.trim(),password:$('ap').value});S.tok=j.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(e){}await loadMe();show('shop')},'Logged in')}
+async function loadMe(){try{S.me=await api('/api/me')}catch(e){S.me=null;S.tok=null}render();if(S.me)await loadPublic();if(S.me&&S.pendingTx){const t=S.pendingTx;S.pendingTx=null;verifyPay(t)}}
+function payOnline(){const a=$('pa').value;go(async()=>{const j=await api('/api/payments/start','POST',{amount:a});location.href=j.link})}
+function verifyPay(t){go(async()=>{const j=await api('/api/payments/verify?tx_ref='+encodeURIComponent(t));try{history.replaceState(null,'',location.pathname)}catch(e){}
+ toast(j.credited?'Payment received. Your wallet is funded.':(j.status==='approved'?'Wallet already funded.':'Payment status: '+j.status));await loadMe();show('wallet')})}
+async function loadPublic(){if(!S.me)return;try{const [c,p]=await Promise.all([api('/api/categories'),api('/api/products')]);S.C=c.categories;S.P=p.products;S.loaded=true}catch(e){toast('Could not reach the store server')}render()}
+async function loadPrivate(){if(!S.me)return;try{const [d,o]=await Promise.all([api('/api/deposits'),api('/api/orders')]);S.dep=d.deposits;S.ord=o.orders;
+ if(isAdmin()){const [ap,ad,ao]=await Promise.all([api('/api/admin/products'),api('/api/admin/deposits'),api('/api/admin/orders')]);S.AP=ap.products;S.adep=ad.deposits;S.aord=ao.orders}}catch(e){toast(e.message)}render()}
+async function refresh(){await Promise.all([loadPublic(),loadPrivate(),loadMe()])}
+function render(){
+ if(S.loaded)Object.keys(S.cart).forEach(i=>{if(!ck(i))delete S.cart[i]});
+ const rk=S.R.map(r=>r.id).join(',');$('revs').classList.toggle('hid',!S.R.length);
+ if(rk!==S._rk){S._rk=rk;let it=[...S.R];while(it.length&&it.length<6)it=it.concat(S.R);const set=it.map(r=>`<div class="rev"><div class="st">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div><p>“${esc(r.message)}”</p><b>${esc(r.name)}</b></div>`).join('');$('revs').innerHTML=S.R.length?`<div class="marq"><div class="track" style="--d:${Math.max(30,it.length*6)}s">${set}${set}</div></div>`:''}
+ $('catalog').classList.toggle('hid',!S.me);$('gate').classList.toggle('hid',!!S.me);
+ $('cc').textContent=Object.values(S.cart).reduce((a,b)=>a+b,0);
+ $('lb').textContent=S.me?'Logout':'Login';$('sb').classList.toggle('hid',!!S.me);
+ document.body.classList.toggle('in',!!S.me);
+ const wl=$('welcome');wl.classList.toggle('hid',!S.me);if(S.me)wl.innerHTML='<b>Welcome'+((prof()&&prof().first_name)?', '+esc(prof().first_name):'')+' 👋</b><br><span class="mu">Browse our categories and prices below.</span>';
+ const b=$('bal');b.classList.toggle('hid',!S.me);b.textContent=((prof()&&prof().first_name)?prof().first_name+' · ':'')+'Balance '+N(prof()&&prof().balance);
+ $('admb').classList.toggle('hid',!isAdmin());
+ $('chips').innerHTML=[{id:'all',name:'All'},...S.C].map(c=>`<button class="chip ${String(S.cat)===String(c.id)?'on':''}" onclick="S.cat='${esc(c.id)}';render()">${esc(c.name)}</button>`).join('');
+ const L=S.P.filter(p=>S.cat==='all'||String(p.category_id)===String(S.cat));
+ $('grid').innerHTML=L.length?L.map(p=>`<div class="card">${p.image_url?`<img src="${esc(p.image_url)}" alt="" onerror="this.outerHTML='<div class=ph>📦</div>'">`:'<div class="ph">📦</div>'}<div class="b"><span class="cat">${esc((S.C.find(c=>String(c.id)===String(p.category_id))||{}).name||'')}</span><b>${esc(p.name)}</b><span class="mu" style="white-space:pre-line">${esc(p.description||'')}</span>${planBlock(p)}<button onclick="add('${p.id}')">Add to cart</button></div></div>`).join(''):'<p class="mu">No products available yet. Order via WhatsApp for what you need.</p>';
+ const ids=Object.keys(S.cart).filter(i=>ck(i));let tot=0;
+ $('cartbox').innerHTML=ids.length?ids.map(i=>{const c=ck(i);tot+=c.price*S.cart[i];return `<div class="row"><span>${esc(c.name)} × ${S.cart[i]}</span><span>${N(c.price*S.cart[i])} <button class="sm d" onclick="rm(decodeURIComponent('${encodeURIComponent(i)}'))">✕</button></span></div>`}).join('')+`<p><b>Total: ${N(tot)}</b></p><textarea rows="2" placeholder="Note for us (e.g. the email or number to recharge or subscribe)" oninput="S.note=this.value">${esc(S.note||'')}</textarea><button onclick="checkout()">Pay from wallet</button>`:'Your cart is empty.';
+ $('walbox').innerHTML=!S.me?'<p>Please <a href="#" onclick="show(\'auth\');return false">log in</a> to use your wallet. You can also order via WhatsApp.</p>':`<p><b>Balance: ${N(prof().balance)}</b></p>${S.online?`<b>💳 Pay online</b><input id="pa" type="number" min="100" placeholder="Amount (₦)"><button onclick="payOnline()">💳 Pay with card, bank or USSD</button><p class="mu">Secure payment by Flutterwave. Your wallet is credited automatically.</p>`:''}<div class="panel" style="margin:0 0 12px"><b>🏦 Pay to this bank account</b><br><span class="mu">${BANK.name}</span><br><b style="font-size:24px;letter-spacing:1px">${BANK.no}</b> <button class="sm" onclick="copyAcct()">📋 Copy</button><br>${BANK.holder}<p class="mu" style="margin:8px 0 0">Send your money to this account, then enter the amount and your payment reference below and tap Submit deposit.</p></div><b>${S.online?'Or deposit by transfer':'Deposit funds'}</b><input id="da" type="number" min="1" placeholder="Amount (₦)"><input id="dr" placeholder="Payment reference / sender name"><button onclick="deposit()">Submit deposit</button><p class="mu">Send the payment, then submit it here. Your balance updates once we confirm it.</p><b>My deposits</b>${S.dep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)}</span><span class="tag">${esc(d.status)}</span></div>`).join('')||'<p class="mu">None yet.</p>'}<b>My orders</b>${S.ord.map(o=>`<div class="row"><span>${esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))}${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}</span><span>${N(o.total)} <span class="tag">${esc(o.status)}</span></span></div>`).join('')||'<p class="mu">None yet.</p>'}`;
+ if(isAdmin())renderAdmin();
+}
+function renderAdmin(){
+ if(!$('v-admin').classList.contains('hid')||1){const sel=$('pc').value;$('pc').innerHTML=S.C.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');if(sel)$('pc').value=sel}
+ $('pt').textContent=S.edit?'Edit product':'Add product';
+ $('rlist').innerHTML=S.R.map(r=>`<div class="row"><span>${esc(r.name)}: ${esc(r.message)}</span><button class="sm d" onclick="delR('${r.id}')">Delete</button></div>`).join('')||'<p class="mu">None yet.</p>';
+ $('clist').innerHTML=S.C.map(c=>`<div class="row"><span>${esc(c.name)}</span><button class="sm d" onclick="delC('${c.id}')">Delete</button></div>`).join('');
+ $('plist').innerHTML=S.AP.map(p=>`<div class="row"><span>${esc(p.name)} · ${N(p.price)} ${p.available===false?'<span class="tag">hidden</span>':''}</span><span><button class="sm s" onclick="togg('${p.id}')">${p.available===false?'Show':'Hide'}</button> <button class="sm s" onclick="editP('${p.id}')">Edit</button> <button class="sm d" onclick="delP('${p.id}')">Delete</button></span></div>`).join('')||'<p class="mu">No products yet.</p>';
+ $('dlist').innerHTML=S.adep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)} <span class="tag">${esc(d.status)}</span></span>${d.status==='pending'?`<span><button class="sm" onclick="dep2('${d.id}','approve')">Approve</button> <button class="sm d" onclick="dep2('${d.id}','reject')">Reject</button></span>`:''}</div>`).join('')||'<p class="mu">None.</p>';
+ $('olist').innerHTML=S.aord.map(o=>`<div class="row"><span>${esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))}${o.note?' ('+esc(o.note)+')':''} · ${N(o.total)} <span class="tag">${esc(o.status)}</span></span>${o.status!=='delivered'?`<button class="sm" onclick="deliv('${o.id}')">Mark delivered</button>`:''}</div>`).join('')||'<p class="mu">None.</p>';
+}
+const done=async()=>{await Promise.all([loadPublic(),loadPrivate()])};
+const ck=k=>{const a=String(k).split('::'),id=a[0],plan=a.slice(1).join('::');const p=S.P.find(x=>String(x.id)===id);if(!p)return null;const pl=plan?(p.plans||[]).find(x=>x.label===plan):null;if(plan&&!pl)return null;return{p,plan,price:pl?Number(pl.price):Number(p.price),name:p.name+(plan?' ('+plan+')':'')}};
+function planBlock(p){const pl=Array.isArray(p.plans)?p.plans:[];
+ if(!pl.length)return '<span class="pr">'+N(p.price)+'</span>';
+ const cur=S.sel[p.id]||pl[0].label,c=pl.find(x=>x.label===cur)||pl[0];
+ return '<select onchange="S.sel[\''+p.id+'\']=this.value;render()">'+pl.map(x=>'<option value="'+esc(x.label)+'"'+(x.label===c.label?' selected':'')+'>'+esc(x.label)+' — '+N(x.price)+'</option>').join('')+'</select><span class="pr">'+N(c.price)+'</span>'}
+function add(id){if(!S.me)return show('auth');const p=S.P.find(x=>String(x.id)===String(id));const pl=p&&Array.isArray(p.plans)?p.plans:[];const plan=pl.length?(S.sel[id]||pl[0].label):'';const k=plan?id+'::'+plan:String(id);S.cart[k]=(S.cart[k]||0)+1;toast('Added to cart');render()}
+function rm(id){delete S.cart[id];render()}
+function checkout(){if(!S.me){toast('Please log in to pay from your wallet');return show('auth')}
+ go(async()=>{await api('/api/orders','POST',{items:Object.keys(S.cart).map(k=>{const a=k.split('::');return{product_id:a[0],plan:a.slice(1).join('::'),qty:S.cart[k]}}),note:S.note||''});S.cart={};S.note='';await Promise.all([loadMe(),loadPrivate()]);show('wallet')},'Order placed! Delivery details will be sent to you.')}
+function deposit(){go(async()=>{await api('/api/deposits','POST',{amount:$('da').value,reference:$('dr').value});await loadPrivate()},'Deposit submitted')}
+function clrP(){S.edit=null;['pn','pp','pi','pd','pl'].forEach(i=>$(i).value='');render()}
+function saveP(){const plans=$('pl').value.split('\n').map(l=>l.split('|')).map(a=>({label:(a[0]||'').trim(),price:Number((a[1]||'').replace(/[^0-9.]/g,''))})).filter(x=>x.label&&x.price>=0);
+ const d={name:$('pn').value,price:plans.length?Math.min(...plans.map(x=>x.price)):$('pp').value,image_url:$('pi').value,category_id:$('pc').value||null,description:$('pd').value,plans};
+ go(async()=>{if(S.edit)await api('/api/admin/products/'+S.edit,'PUT',d);else await api('/api/admin/products','POST',d);clrP();await done()},'Saved')}
+function editP(id){const p=S.AP.find(x=>String(x.id)===String(id));S.edit=id;$('pn').value=p.name;$('pp').value=p.price;$('pi').value=p.image_url||'';$('pc').value=p.category_id||'';$('pd').value=p.description||'';$('pl').value=(p.plans||[]).map(x=>x.label+' | '+x.price).join('\n');scrollTo(0,0)}
+function delP(id){if(confirm('Delete this product?'))go(async()=>{await api('/api/admin/products/'+id,'DELETE');await done()})}
+function togg(id){const p=S.AP.find(x=>String(x.id)===String(id));go(async()=>{await api('/api/admin/products/'+id,'PUT',{available:p.available===false});await done()})}
+function addC(){const n=$('cn').value.trim();if(n)go(async()=>{await api('/api/admin/categories','POST',{name:n});$('cn').value='';await done()})}
+function delC(id){if(confirm('Delete category?'))go(async()=>{await api('/api/admin/categories/'+id,'DELETE');await done()})}
+function dep2(id,a){go(async()=>{await api(`/api/admin/deposits/${id}/${a}`,'POST');await Promise.all([loadPrivate(),loadMe()])})}
+function deliv(id){go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT');await loadPrivate()})}
+try{const t=localStorage.getItem('dbm_theme');setTheme(t||themeNow())}catch(e){setTheme(themeNow())}
+$('yr').textContent=new Date().getFullYear();$('fb-wa').href='https://wa.me/'+SUP.wa;$('fb-tg').href='https://t.me/'+SUP.tg;$('fb-tg').classList.toggle('hid',!SUP.tg);
+$('b-tg').classList.toggle('hid',!SUP.tg);$('b-mail').classList.toggle('hid',!SUP.mail);
+try{S.pendingTx=new URLSearchParams(location.search).get('tx_ref')}catch(e){}
+api('/api/payments/config').then(j=>{S.online=j.online;render()}).catch(()=>{});
+mode('login');render();loadReviews();if(S.tok)loadMe();
+</script></body></html>
