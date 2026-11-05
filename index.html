@@ -37,6 +37,7 @@ input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-r
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:9;max-width:90%}
 footer{text-align:center;padding:26px 14px 160px;color:var(--mu)}
 .hid{display:none!important}
+.cred{background:var(--bg);border:1px dashed var(--ac);border-radius:12px;padding:10px;margin-top:10px}.cred pre{white-space:pre-wrap;word-break:break-all;margin:6px 0;font:inherit}
 .promos{display:grid;gap:14px;margin:6px 0 10px}
 .promo{border-radius:22px;padding:22px;color:#fff;background:linear-gradient(135deg,var(--ac),#4c1d95)}
 .promo .pt{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.12em;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);padding:6px 12px;border-radius:99px}
@@ -98,6 +99,7 @@ body.in .hero{display:none}
 <button class="mrow" onclick="nav('numbers')"><span class="i">📱</span>Phone Numbers</button>
 <button class="mrow" onclick="nav('social')"><span class="i">🚀</span>Social Boost</button>
 <button class="mrow" onclick="nav('tools')"><span class="i">🛠️</span>Tools &amp; Subscriptions</button>
+<button class="mrow" onclick="nav('orders')"><span class="i">📦</span>My Purchases</button>
 <button class="mrow" onclick="nav('wallet')"><span class="i">₦</span>Wallet</button>
 <button class="mrow" onclick="nav('faq')"><span class="i">❓</span>FAQ</button>
 <button class="mrow" onclick="nav('support')"><span class="i">🎧</span>Support</button>
@@ -184,7 +186,8 @@ body.in .hero{display:none}
 
  <section id="v-cart" class="hid"><h2>Your Cart</h2><div class="panel" id="cartbox"></div><button class="s" onclick="show('shop')">← Keep shopping</button></section>
 
- <section id="v-wallet" class="hid"><h2>My Wallet &amp; Orders</h2>
+ <section id="v-orders" class="hid"><h2>📦 My Purchases</h2><p class="mu">Your login details and delivery information appear here after your order is delivered.</p><div id="obox"></div><button class="s" onclick="show('shop')">← Back</button></section>
+<section id="v-wallet" class="hid"><h2>My Wallet &amp; Orders</h2>
   <div class="panel" id="walbox"></div><button class="s" onclick="show('shop')">← Back</button></section>
 
  <section id="v-admin" class="hid"><h2>Admin Dashboard</h2>
@@ -225,15 +228,15 @@ body.in .hero{display:none}
 const API="https://deeblaqs-market-new-backend.onrender.com";
 const $=id=>document.getElementById(id),N=n=>'₦'+Number(n||0).toLocaleString();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const S={P:[],C:[],AP:[],dep:[],ord:[],adep:[],aord:[],R:[],sel:{},cart:{},cat:'all',edit:null,me:null,tok:null};
+const S={P:[],C:[],AP:[],dep:[],ord:[],adep:[],aord:[],R:[],dl:{},sel:{},cart:{},cat:'all',edit:null,me:null,tok:null};
 try{S.tok=localStorage.getItem('dbm_tok')}catch(e){}
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3000)}
 async function api(path,method='GET',body){
  const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(S.tok?{Authorization:'Bearer '+S.tok}:{})},body:body?JSON.stringify(body):undefined});
  const j=await r.json().catch(()=>({}));if(r.status===401&&S.tok){S.tok=null;S.me=null;try{localStorage.removeItem('dbm_tok')}catch(e){}render()}if(!r.ok)throw new Error(j.error||'Request failed');return j}
 const go=async(f,ok)=>{try{await f();if(ok)toast(ok)}catch(e){toast(e.message)}};
-const VIEWS=['shop','auth','cart','wallet','admin'];
-function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);if(v==='wallet'||v==='admin')loadPrivate();render()}
+const VIEWS=['shop','auth','cart','wallet','orders','admin'];
+function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);if(v==='wallet'||v==='admin'||v==='orders')loadPrivate();render()}
 async function loadReviews(){try{const j=await api('/api/reviews');S.R=j.reviews}catch(e){}render()}
 function addR(){go(async()=>{await api('/api/admin/reviews','POST',{name:$('rn').value,message:$('rm').value,rating:$('rr').value});$('rn').value='';$('rm').value='';await loadReviews()},'Feedback added')}
 function delR(id){if(confirm('Delete this feedback?'))go(async()=>{await api('/api/admin/reviews/'+id,'DELETE');await loadReviews()})}
@@ -264,6 +267,7 @@ function nav(x){closeMenu();
  else if(x==='social')goCat('social');
  else if(x==='tools')goCat('tool');
  else if(x==='wallet')show('wallet');
+ else if(x==='orders')show('orders');
  else if(x==='admin')show('admin');
  else jump({faq:'faq',support:'support',policy:'policy',contact:'contact',terms:'terms'}[x]||'faq')}
 function browse(){if(S.me){show('shop');setTimeout(()=>$('catalog').scrollIntoView({behavior:'smooth'}),60)}else{mode('signup');show('auth')}}
@@ -291,7 +295,7 @@ function authGo(){
  if(AM==='forgot')return go(async()=>{const j=await api('/api/auth/forgot','POST',{email:e});mode('reset',j.message);$('ae').value=e},'Code sent');
  if(AM==='reset'){if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
   return go(async()=>{const j=await api('/api/auth/reset','POST',{email:e,code:$('ac').value.trim(),password:p});$('ap').value='';$('ac').value='';mode('login',j.message)},'Password changed')}}
-async function login(){await go(async()=>{const j=await api('/api/auth/login','POST',{email:$('ae').value.trim(),password:$('ap').value});S.tok=j.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(e){}await loadMe();show('shop')},'Logged in')}
+async function login(){await go(async()=>{const j=await api('/api/auth/login','POST',{email:$('ae').value.trim(),password:$('ap').value});S.tok=j.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(e){}await loadMe();show(isAdmin()?'admin':'shop')},'Logged in')}
 async function loadMe(){try{S.me=await api('/api/me')}catch(e){S.me=null;S.tok=null}render();if(S.me)await loadPublic();if(S.me&&S.pendingTx){const t=S.pendingTx;S.pendingTx=null;verifyPay(t)}}
 function payOnline(){const a=$('pa').value;go(async()=>{const j=await api('/api/payments/start','POST',{amount:a});location.href=j.link})}
 function verifyPay(t){go(async()=>{const j=await api('/api/payments/verify?tx_ref='+encodeURIComponent(t));try{history.replaceState(null,'',location.pathname)}catch(e){}
@@ -304,6 +308,7 @@ function render(){
  if(S.loaded)Object.keys(S.cart).forEach(i=>{if(!ck(i))delete S.cart[i]});
  const rk=S.R.map(r=>r.id).join(',');$('revs').classList.toggle('hid',!S.R.length);
  if(rk!==S._rk){S._rk=rk;let it=[...S.R];while(it.length&&it.length<6)it=it.concat(S.R);const set=it.map(r=>`<div class="rev"><div class="st">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div><p>“${esc(r.message)}”</p><b>${esc(r.name)}</b></div>`).join('');$('revs').innerHTML=S.R.length?`<div class="marq"><div class="track" style="--d:${Math.max(30,it.length*6)}s">${set}${set}</div></div>`:''}
+ $('obox').innerHTML=!S.me?'<p>Please <a href="#" onclick="show(\'auth\');return false">log in</a> to see your purchases.</p>':(S.ord.map(o=>{const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel"><b>${it}</b><br><span class="mu">${N(o.total)} · ${esc(new Date(o.created_at).toLocaleDateString())}</span> <span class="tag">${o.status==='delivered'?'Delivered':'Processing'}</span>${o.note?'<br><span class="mu">Your note: '+esc(o.note)+'</span>':''}${o.status==='delivered'?(o.delivery?'<div class="cred"><b>🔑 Your details</b><pre id="cr-'+o.id+'">'+esc(o.delivery)+'</pre><button class="sm" onclick="copyCr(\''+o.id+'\')">📋 Copy</button></div>':'<p class="mu">Delivered. Contact support if you need help.</p>'):'<p class="mu">We are preparing your order. Your details will appear here once it is delivered.</p>'}</div>`}).join('')||'<p class="mu">No purchases yet.</p>');
  $('catalog').classList.toggle('hid',!S.me);$('gate').classList.toggle('hid',!!S.me);
  $('cc').textContent=Object.values(S.cart).reduce((a,b)=>a+b,0);
  $('lb').textContent=S.me?'Logout':'Login';$('sb').classList.toggle('hid',!!S.me);
@@ -316,7 +321,7 @@ function render(){
  $('grid').innerHTML=L.length?L.map(p=>`<div class="card">${p.image_url?`<img src="${esc(p.image_url)}" alt="" onerror="this.outerHTML='<div class=ph>📦</div>'">`:'<div class="ph">📦</div>'}<div class="b"><span class="cat">${esc((S.C.find(c=>String(c.id)===String(p.category_id))||{}).name||'')}</span><b>${esc(p.name)}</b><span class="mu" style="white-space:pre-line">${esc(p.description||'')}</span>${planBlock(p)}<button onclick="add('${p.id}')">Add to cart</button></div></div>`).join(''):'<p class="mu">No products available yet. Order via WhatsApp for what you need.</p>';
  const ids=Object.keys(S.cart).filter(i=>ck(i));let tot=0;
  $('cartbox').innerHTML=ids.length?ids.map(i=>{const c=ck(i);tot+=c.price*S.cart[i];return `<div class="row"><span>${esc(c.name)} × ${S.cart[i]}</span><span>${N(c.price*S.cart[i])} <button class="sm d" onclick="rm(decodeURIComponent('${encodeURIComponent(i)}'))">✕</button></span></div>`}).join('')+`<p><b>Total: ${N(tot)}</b></p><textarea rows="2" placeholder="Note for us (e.g. the email or number to recharge or subscribe)" oninput="S.note=this.value">${esc(S.note||'')}</textarea><button onclick="checkout()">Pay from wallet</button>`:'Your cart is empty.';
- $('walbox').innerHTML=!S.me?'<p>Please <a href="#" onclick="show(\'auth\');return false">log in</a> to use your wallet. You can also order via WhatsApp.</p>':`<p><b>Balance: ${N(prof().balance)}</b></p>${S.online?`<b>💳 Pay online</b><input id="pa" type="number" min="100" placeholder="Amount (₦)"><button onclick="payOnline()">💳 Pay with card, bank or USSD</button><p class="mu">Secure payment by Flutterwave. Your wallet is credited automatically.</p>`:''}<div class="panel" style="margin:0 0 12px"><b>🏦 Pay to this bank account</b><br><span class="mu">${BANK.name}</span><br><b style="font-size:24px;letter-spacing:1px">${BANK.no}</b> <button class="sm" onclick="copyAcct()">📋 Copy</button><br>${BANK.holder}<p class="mu" style="margin:8px 0 0">Send your money to this account, then enter the amount and your payment reference below and tap Submit deposit.</p></div><b>${S.online?'Or deposit by transfer':'Deposit funds'}</b><input id="da" type="number" min="1" placeholder="Amount (₦)"><input id="dr" placeholder="Payment reference / sender name"><button onclick="deposit()">Submit deposit</button><p class="mu">Send the payment, then submit it here. Your balance updates once we confirm it.</p><b>My deposits</b>${S.dep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)}</span><span class="tag">${esc(d.status)}</span></div>`).join('')||'<p class="mu">None yet.</p>'}<b>My orders</b>${S.ord.map(o=>`<div class="row"><span>${esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))}${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}</span><span>${N(o.total)} <span class="tag">${esc(o.status)}</span></span></div>`).join('')||'<p class="mu">None yet.</p>'}`;
+ $('walbox').innerHTML=!S.me?'<p>Please <a href="#" onclick="show(\'auth\');return false">log in</a> to use your wallet. You can also order via WhatsApp.</p>':`<p><b>Balance: ${N(prof().balance)}</b> <button class="s sm" onclick="show('orders')">📦 My purchases</button></p>${S.online?`<b>💳 Pay online</b><input id="pa" type="number" min="100" placeholder="Amount (₦)"><button onclick="payOnline()">💳 Pay with card, bank or USSD</button><p class="mu">Secure payment by Flutterwave. Your wallet is credited automatically.</p>`:''}<div class="panel" style="margin:0 0 12px"><b>🏦 Pay to this bank account</b><br><span class="mu">${BANK.name}</span><br><b style="font-size:24px;letter-spacing:1px">${BANK.no}</b> <button class="sm" onclick="copyAcct()">📋 Copy</button><br>${BANK.holder}<p class="mu" style="margin:8px 0 0">Send your money to this account, then enter the amount and your payment reference below and tap Submit deposit.</p></div><b>${S.online?'Or deposit by transfer':'Deposit funds'}</b><input id="da" type="number" min="1" placeholder="Amount (₦)"><input id="dr" placeholder="Payment reference / sender name"><button onclick="deposit()">Submit deposit</button><p class="mu">Send the payment, then submit it here. Your balance updates once we confirm it.</p><b>My deposits</b>${S.dep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)}</span><span class="tag">${esc(d.status)}</span></div>`).join('')||'<p class="mu">None yet.</p>'}<b>My orders</b>${S.ord.map(o=>`<div class="row"><span>${esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))}${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}</span><span>${N(o.total)} <span class="tag">${esc(o.status)}</span></span></div>`).join('')||'<p class="mu">None yet.</p>'}`;
  if(isAdmin())renderAdmin();
 }
 function renderAdmin(){
@@ -326,7 +331,7 @@ function renderAdmin(){
  $('clist').innerHTML=S.C.map(c=>`<div class="row"><span>${esc(c.name)}</span><button class="sm d" onclick="delC('${c.id}')">Delete</button></div>`).join('');
  $('plist').innerHTML=S.AP.map(p=>`<div class="row"><span>${esc(p.name)} · ${N(p.price)} ${p.available===false?'<span class="tag">hidden</span>':''}</span><span><button class="sm s" onclick="togg('${p.id}')">${p.available===false?'Show':'Hide'}</button> <button class="sm s" onclick="editP('${p.id}')">Edit</button> <button class="sm d" onclick="delP('${p.id}')">Delete</button></span></div>`).join('')||'<p class="mu">No products yet.</p>';
  $('dlist').innerHTML=S.adep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)} <span class="tag">${esc(d.status)}</span></span>${d.status==='pending'?`<span><button class="sm" onclick="dep2('${d.id}','approve')">Approve</button> <button class="sm d" onclick="dep2('${d.id}','reject')">Reject</button></span>`:''}</div>`).join('')||'<p class="mu">None.</p>';
- $('olist').innerHTML=S.aord.map(o=>`<div class="row"><span>${esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))}${o.note?' ('+esc(o.note)+')':''} · ${N(o.total)} <span class="tag">${esc(o.status)}</span></span>${o.status!=='delivered'?`<button class="sm" onclick="deliv('${o.id}')">Mark delivered</button>`:''}</div>`).join('')||'<p class="mu">None.</p>';
+ $('olist').innerHTML=S.aord.map(o=>{const pr=o.profiles||{};const who=esc(((pr.first_name||'')+' '+(pr.last_name||'')).trim())+(pr.phone?' · '+esc(pr.phone):'')+(pr.email?' · '+esc(pr.email):'');const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel" style="margin:8px 0"><b>${it}</b> · ${N(o.total)} <span class="tag">${esc(o.status)}</span><br><span class="mu">${who}</span>${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}${o.status!=='delivered'?`<textarea rows="3" placeholder="Paste the login details or delivery info here" oninput="S.dl['${o.id}']=this.value">${esc(S.dl[o.id]||'')}</textarea><button class="sm" onclick="deliv('${o.id}')">✅ Deliver to customer</button>`:`<div class="cred"><pre>${esc(o.delivery||'(no details)')}</pre></div>`}</div>`}).join('')||'<p class="mu">None.</p>';
 }
 const done=async()=>{await Promise.all([loadPublic(),loadPrivate()])};
 const ck=k=>{const a=String(k).split('::'),id=a[0],plan=a.slice(1).join('::');const p=S.P.find(x=>String(x.id)===id);if(!p)return null;const pl=plan?(p.plans||[]).find(x=>x.label===plan):null;if(plan&&!pl)return null;return{p,plan,price:pl?Number(pl.price):Number(p.price),name:p.name+(plan?' ('+plan+')':'')}};
@@ -337,7 +342,7 @@ function planBlock(p){const pl=Array.isArray(p.plans)?p.plans:[];
 function add(id){if(!S.me)return show('auth');const p=S.P.find(x=>String(x.id)===String(id));const pl=p&&Array.isArray(p.plans)?p.plans:[];const plan=pl.length?(S.sel[id]||pl[0].label):'';const k=plan?id+'::'+plan:String(id);S.cart[k]=(S.cart[k]||0)+1;toast('Added to cart');render()}
 function rm(id){delete S.cart[id];render()}
 function checkout(){if(!S.me){toast('Please log in to pay from your wallet');return show('auth')}
- go(async()=>{await api('/api/orders','POST',{items:Object.keys(S.cart).map(k=>{const a=k.split('::');return{product_id:a[0],plan:a.slice(1).join('::'),qty:S.cart[k]}}),note:S.note||''});S.cart={};S.note='';await Promise.all([loadMe(),loadPrivate()]);show('wallet')},'Order placed! Delivery details will be sent to you.')}
+ go(async()=>{await api('/api/orders','POST',{items:Object.keys(S.cart).map(k=>{const a=k.split('::');return{product_id:a[0],plan:a.slice(1).join('::'),qty:S.cart[k]}}),note:S.note||''});S.cart={};S.note='';await Promise.all([loadMe(),loadPrivate()]);show('orders')},'Order placed! Your details will appear in My Purchases once delivered.')}
 function deposit(){go(async()=>{await api('/api/deposits','POST',{amount:$('da').value,reference:$('dr').value});await loadPrivate()},'Deposit submitted')}
 function clrP(){S.edit=null;['pn','pp','pi','pd','pl'].forEach(i=>$(i).value='');render()}
 function saveP(){const plans=$('pl').value.split('\n').map(l=>l.split('|')).map(a=>({label:(a[0]||'').trim(),price:Number((a[1]||'').replace(/[^0-9.]/g,''))})).filter(x=>x.label&&x.price>=0);
@@ -349,7 +354,8 @@ function togg(id){const p=S.AP.find(x=>String(x.id)===String(id));go(async()=>{a
 function addC(){const n=$('cn').value.trim();if(n)go(async()=>{await api('/api/admin/categories','POST',{name:n});$('cn').value='';await done()})}
 function delC(id){if(confirm('Delete category?'))go(async()=>{await api('/api/admin/categories/'+id,'DELETE');await done()})}
 function dep2(id,a){go(async()=>{await api(`/api/admin/deposits/${id}/${a}`,'POST');await Promise.all([loadPrivate(),loadMe()])})}
-function deliv(id){go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT');await loadPrivate()})}
+function deliv(id){const t=(S.dl[id]||'').trim();if(!t&&!confirm('Deliver without any details?'))return;go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT',{delivery:t});delete S.dl[id];await loadPrivate()},'Delivered')}
+function copyCr(id){const e=$('cr-'+id);try{navigator.clipboard.writeText(e.textContent).then(()=>toast('Copied')).catch(()=>toast('Could not copy. Hold the text to copy it.'))}catch(x){toast('Could not copy. Hold the text to copy it.')}}
 try{const t=localStorage.getItem('dbm_theme');setTheme(t||themeNow())}catch(e){setTheme(themeNow())}
 $('yr').textContent=new Date().getFullYear();$('fb-wa').href='https://wa.me/'+SUP.wa;$('fb-tg').href='https://t.me/'+SUP.tg;$('fb-tg').classList.toggle('hid',!SUP.tg);
 $('b-tg').classList.toggle('hid',!SUP.tg);$('b-mail').classList.toggle('hid',!SUP.mail);
