@@ -203,6 +203,7 @@ body.in .hero{display:none}
   <div class="panel"><b>Products</b><div id="plist"></div></div>
   <div class="panel"><b>Deposit requests</b><div id="dlist"></div></div>
   <div class="panel"><b>Orders</b><div id="olist"></div></div>
+  <div class="panel"><b>📦 Auto-delivery stock</b><p class="mu">Add one login per line. When a customer buys, the next unused line is delivered to them automatically. Products with no stock are delivered by hand.</p><select id="sp"></select><input id="sl" placeholder="Plan name (only if the product has plans, e.g. 1 month)"><textarea id="sd" rows="4" placeholder="email | password (one item per line)"></textarea><button onclick="addStock()">Add stock</button><div id="stlist"></div></div>
   <div class="panel"><b>Customer feedback</b><p class="mu">Only add real feedback that your customers gave you.</p><input id="rn" placeholder="Customer name"><input id="rm" placeholder="What the customer said"><select id="rr"><option>5</option><option>4</option><option>3</option></select><button onclick="addR()">Add feedback</button><div id="rlist"></div></div>
   <button class="s" onclick="show('shop')">← Back to store</button></section>
 </main>
@@ -228,7 +229,7 @@ body.in .hero{display:none}
 const API="https://deeblaqs-market-new-backend.onrender.com";
 const $=id=>document.getElementById(id),N=n=>'₦'+Number(n||0).toLocaleString();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const S={P:[],C:[],AP:[],dep:[],ord:[],adep:[],aord:[],R:[],dl:{},sel:{},cart:{},cat:'all',edit:null,me:null,tok:null};
+const S={P:[],C:[],AP:[],dep:[],ord:[],adep:[],aord:[],R:[],stock:[],dl:{},sel:{},cart:{},cat:'all',edit:null,me:null,tok:null};
 try{S.tok=localStorage.getItem('dbm_tok')}catch(e){}
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3000)}
 async function api(path,method='GET',body){
@@ -302,7 +303,7 @@ function verifyPay(t){go(async()=>{const j=await api('/api/payments/verify?tx_re
  toast(j.credited?'Payment received. Your wallet is funded.':(j.status==='approved'?'Wallet already funded.':'Payment status: '+j.status));await loadMe();show('wallet')})}
 async function loadPublic(){if(!S.me)return;try{const [c,p]=await Promise.all([api('/api/categories'),api('/api/products')]);S.C=c.categories;S.P=p.products;S.loaded=true}catch(e){toast('Could not reach the store server')}render()}
 async function loadPrivate(){if(!S.me)return;try{const [d,o]=await Promise.all([api('/api/deposits'),api('/api/orders')]);S.dep=d.deposits;S.ord=o.orders;
- if(isAdmin()){const [ap,ad,ao]=await Promise.all([api('/api/admin/products'),api('/api/admin/deposits'),api('/api/admin/orders')]);S.AP=ap.products;S.adep=ad.deposits;S.aord=ao.orders}}catch(e){toast(e.message)}render()}
+ if(isAdmin()){const [ap,ad,ao,st]=await Promise.all([api('/api/admin/products'),api('/api/admin/deposits'),api('/api/admin/orders'),api('/api/admin/stock')]);S.AP=ap.products;S.adep=ad.deposits;S.aord=ao.orders;S.stock=st.stock}}catch(e){toast(e.message)}render()}
 async function refresh(){await Promise.all([loadPublic(),loadPrivate(),loadMe()])}
 function render(){
  if(S.loaded)Object.keys(S.cart).forEach(i=>{if(!ck(i))delete S.cart[i]});
@@ -327,11 +328,13 @@ function render(){
 function renderAdmin(){
  if(!$('v-admin').classList.contains('hid')||1){const sel=$('pc').value;$('pc').innerHTML=S.C.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');if(sel)$('pc').value=sel}
  $('pt').textContent=S.edit?'Edit product':'Add product';
+ {const sv=$('sp').value;$('sp').innerHTML=S.AP.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');if(sv)$('sp').value=sv}
+ $('stlist').innerHTML=S.stock.map(x=>{const p=S.AP.find(y=>String(y.id)===String(x.product_id));return `<div class="row"><span>${esc(p?p.name:x.product_id)}${x.plan?' ('+esc(x.plan)+')':''}</span><span class="tag">${x.count} in stock</span></div>`}).join('')||'<p class="mu">No stock added yet.</p>';
  $('rlist').innerHTML=S.R.map(r=>`<div class="row"><span>${esc(r.name)}: ${esc(r.message)}</span><button class="sm d" onclick="delR('${r.id}')">Delete</button></div>`).join('')||'<p class="mu">None yet.</p>';
  $('clist').innerHTML=S.C.map(c=>`<div class="row"><span>${esc(c.name)}</span><button class="sm d" onclick="delC('${c.id}')">Delete</button></div>`).join('');
  $('plist').innerHTML=S.AP.map(p=>`<div class="row"><span>${esc(p.name)} · ${N(p.price)} ${p.available===false?'<span class="tag">hidden</span>':''}</span><span><button class="sm s" onclick="togg('${p.id}')">${p.available===false?'Show':'Hide'}</button> <button class="sm s" onclick="editP('${p.id}')">Edit</button> <button class="sm d" onclick="delP('${p.id}')">Delete</button></span></div>`).join('')||'<p class="mu">No products yet.</p>';
  $('dlist').innerHTML=S.adep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)} <span class="tag">${esc(d.status)}</span></span>${d.status==='pending'?`<span><button class="sm" onclick="dep2('${d.id}','approve')">Approve</button> <button class="sm d" onclick="dep2('${d.id}','reject')">Reject</button></span>`:''}</div>`).join('')||'<p class="mu">None.</p>';
- $('olist').innerHTML=S.aord.map(o=>{const pr=o.profiles||{};const who=esc(((pr.first_name||'')+' '+(pr.last_name||'')).trim())+(pr.phone?' · '+esc(pr.phone):'')+(pr.email?' · '+esc(pr.email):'');const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel" style="margin:8px 0"><b>${it}</b> · ${N(o.total)} <span class="tag">${esc(o.status)}</span><br><span class="mu">${who}</span>${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}${o.status!=='delivered'?`<textarea rows="3" placeholder="Paste the login details or delivery info here" oninput="S.dl['${o.id}']=this.value">${esc(S.dl[o.id]||'')}</textarea><button class="sm" onclick="deliv('${o.id}')">✅ Deliver to customer</button>`:`<div class="cred"><pre>${esc(o.delivery||'(no details)')}</pre></div>`}</div>`}).join('')||'<p class="mu">None.</p>';
+ $('olist').innerHTML=S.aord.map(o=>{const pr=o.profiles||{};const who=esc(((pr.first_name||'')+' '+(pr.last_name||'')).trim())+(pr.phone?' · '+esc(pr.phone):'')+(pr.email?' · '+esc(pr.email):'');const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel" style="margin:8px 0"><b>${it}</b> · ${N(o.total)} <span class="tag">${esc(o.status)}</span><br><span class="mu">${who}</span>${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}${o.status!=='delivered'?`<textarea rows="3" placeholder="Paste the login details or delivery info here" oninput="S.dl['${o.id}']=this.value">${esc(S.dl[o.id]||'')}</textarea><button class="sm" onclick="deliv('${o.id}')">✅ Deliver to customer</button>`:`<textarea rows="3" placeholder="Add or change the details the customer sees" oninput="S.dl['${o.id}']=this.value">${esc(S.dl[o.id]!==undefined?S.dl[o.id]:(o.delivery||''))}</textarea><button class="sm" onclick="deliv('${o.id}')">💾 Update details</button>`}</div>`}).join('')||'<p class="mu">None.</p>';
 }
 const done=async()=>{await Promise.all([loadPublic(),loadPrivate()])};
 const ck=k=>{const a=String(k).split('::'),id=a[0],plan=a.slice(1).join('::');const p=S.P.find(x=>String(x.id)===id);if(!p)return null;const pl=plan?(p.plans||[]).find(x=>x.label===plan):null;if(plan&&!pl)return null;return{p,plan,price:pl?Number(pl.price):Number(p.price),name:p.name+(plan?' ('+plan+')':'')}};
@@ -354,7 +357,8 @@ function togg(id){const p=S.AP.find(x=>String(x.id)===String(id));go(async()=>{a
 function addC(){const n=$('cn').value.trim();if(n)go(async()=>{await api('/api/admin/categories','POST',{name:n});$('cn').value='';await done()})}
 function delC(id){if(confirm('Delete category?'))go(async()=>{await api('/api/admin/categories/'+id,'DELETE');await done()})}
 function dep2(id,a){go(async()=>{await api(`/api/admin/deposits/${id}/${a}`,'POST');await Promise.all([loadPrivate(),loadMe()])})}
-function deliv(id){const t=(S.dl[id]||'').trim();if(!t&&!confirm('Deliver without any details?'))return;go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT',{delivery:t});delete S.dl[id];await loadPrivate()},'Delivered')}
+function addStock(){go(async()=>{await api('/api/admin/stock','POST',{product_id:$('sp').value,plan:$('sl').value.trim(),lines:$('sd').value});$('sd').value='';await loadPrivate()},'Stock added')}
+function deliv(id){const o=S.aord.find(x=>String(x.id)===String(id));const t=(S.dl[id]!==undefined?S.dl[id]:((o&&o.delivery)||'')).trim();if(!t&&!confirm('Deliver without any details?'))return;go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT',{delivery:t});delete S.dl[id];await loadPrivate()},'Delivered')}
 function copyCr(id){const e=$('cr-'+id);try{navigator.clipboard.writeText(e.textContent).then(()=>toast('Copied')).catch(()=>toast('Could not copy. Hold the text to copy it.'))}catch(x){toast('Could not copy. Hold the text to copy it.')}}
 try{const t=localStorage.getItem('dbm_theme');setTheme(t||themeNow())}catch(e){setTheme(themeNow())}
 $('yr').textContent=new Date().getFullYear();$('fb-wa').href='https://wa.me/'+SUP.wa;$('fb-tg').href='https://t.me/'+SUP.tg;$('fb-tg').classList.toggle('hid',!SUP.tg);
