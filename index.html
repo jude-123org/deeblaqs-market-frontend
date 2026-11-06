@@ -37,6 +37,7 @@ input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-r
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:9;max-width:90%}
 footer{text-align:center;padding:26px 14px 160px;color:var(--mu)}
 .hid{display:none!important}
+button:disabled{opacity:.5;cursor:not-allowed}
 .cred{background:var(--bg);border:1px dashed var(--ac);border-radius:12px;padding:10px;margin-top:10px}.cred pre{white-space:pre-wrap;word-break:break-all;margin:6px 0;font:inherit}
 .promos{display:grid;gap:14px;margin:6px 0 10px}
 .promo{border-radius:22px;padding:22px;color:#fff;background:linear-gradient(135deg,var(--ac),#4c1d95)}
@@ -121,7 +122,7 @@ body.in .hero{display:none}
   <div id="gate" class="panel"><b>🔐 Members only</b><p>Create a free account or log in to see our products, categories and prices.</p><button onclick="mode('signup');show('auth')">✨ Create account</button> <button class="s" onclick="mode('login');show('auth')">🔑 Login</button></div>
   <div id="catalog" class="hid">
   <div id="welcome" class="panel hid"></div>
-  <h2>Products</h2><div class="chips" id="chips"></div><div class="grid" id="grid"></div>
+  <h2>Products</h2><input id="sq" placeholder="🔍 Search products" oninput="searchSoon(this.value)"><div class="chips" id="chips"></div><div class="grid" id="grid"></div><div id="more" class="hid" style="text-align:center;margin:12px 0"><button class="s" onclick="loadPublic(true)">Load more products</button></div>
   </div>
   <div class="eyebrow">WHY CHOOSE DEEBLAQ’S MARKET?</div><h2 style="margin-top:6px">Fast, verified and easy to order.</h2>
   <div class="why">
@@ -195,15 +196,17 @@ body.in .hero{display:none}
    <div class="panel"><b id="pt">Add product</b>
     <input id="pn" placeholder="Product name"><input id="pp" type="number" min="0" placeholder="Price (₦)">
     <input id="pi" placeholder="Image URL (https://…)"><select id="pc"></select>
+    <input id="pq" type="number" min="0" placeholder="Quantity in stock (leave empty for unlimited)">
     <textarea id="pl" rows="3" placeholder="Plans (optional). One per line: 1 month | 3500"></textarea>
     <textarea id="pd" rows="3" placeholder="Describe what it does and what the customer gets (optional)"></textarea>
     <button onclick="saveP()">Save product</button> <button class="s" onclick="clrP()">Clear</button></div>
    <div class="panel"><b>Categories</b><input id="cn" placeholder="New category name"><button onclick="addC()">Add category</button><div id="clist"></div></div>
   </div>
-  <div class="panel"><b>Products</b><div id="plist"></div></div>
-  <div class="panel"><b>Deposit requests</b><div id="dlist"></div></div>
-  <div class="panel"><b>Orders</b><div id="olist"></div></div>
-  <div class="panel"><b>📦 Auto-delivery stock</b><p class="mu">Add one login per line. When a customer buys, the next unused line is delivered to them automatically. Products with no stock are delivered by hand.</p><select id="sp"></select><input id="sl" placeholder="Plan name (only if the product has plans, e.g. 1 month)"><textarea id="sd" rows="4" placeholder="email | password (one item per line)"></textarea><button onclick="addStock()">Add stock</button><div id="stlist"></div></div>
+  <div class="panel"><b>Products</b><input id="apq" placeholder="🔍 Search products" oninput="apSearch(this.value)"><div id="plist"></div><button id="apmore" class="s hid" onclick="loadAP(true)">Load more</button></div>
+  <div class="panel"><b>Deposit requests</b> <button class="s sm" id="dtog" onclick="toggDep()">Show all</button><div id="dlist"></div><button id="dmore" class="s hid" onclick="loadAD(true)">Load more</button></div>
+  <div class="panel"><b>Orders</b> <button class="s sm" id="otog" onclick="toggOrd()">Show all</button><div id="olist"></div><button id="omore" class="s hid" onclick="loadAO(true)">Load more</button></div>
+  <div class="panel"><b>👥 Customers (<span id="ctotal">0</span>)</b><input id="cq" placeholder="🔍 Search by name, email or phone" oninput="custSearch(this.value)"><div id="custlist"></div><button id="cmore" class="s hid" onclick="loadCust(true)">Load more</button></div>
+  <div class="panel"><b>📦 Auto-delivery stock</b><p class="mu">Add one login per line. When a customer buys, the next unused line is delivered to them automatically. Products with no stock are delivered by hand.</p><p>Adding stock for: <b id="stfor">tap 📦 Stock on a product above</b></p><input id="sl" placeholder="Plan name (only if the product has plans, e.g. 1 month)"><textarea id="sd" rows="4" placeholder="email | password (one item per line)"></textarea><button onclick="addStock()">Add stock</button><div id="stlist"></div></div>
   <div class="panel"><b>Customer feedback</b><p class="mu">Only add real feedback that your customers gave you.</p><input id="rn" placeholder="Customer name"><input id="rm" placeholder="What the customer said"><select id="rr"><option>5</option><option>4</option><option>3</option></select><button onclick="addR()">Add feedback</button><div id="rlist"></div></div>
   <button class="s" onclick="show('shop')">← Back to store</button></section>
 </main>
@@ -229,7 +232,7 @@ body.in .hero{display:none}
 const API="https://deeblaqs-market-new-backend.onrender.com";
 const $=id=>document.getElementById(id),N=n=>'₦'+Number(n||0).toLocaleString();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const S={P:[],C:[],AP:[],dep:[],ord:[],adep:[],aord:[],R:[],stock:[],dl:{},sel:{},cart:{},cat:'all',edit:null,me:null,tok:null};
+const S={P:[],C:[],AP:[],dep:[],ord:[],adep:[],aord:[],R:[],stock:[],dl:{},sel:{},q:'',page:1,more:false,known:{},apq:'',apPage:1,apMore:false,depPage:1,depMore:false,depAll:false,ordPage:1,ordMore:false,ordAll:false,cust:[],cq:'',custPage:1,custMore:false,custTotal:0,stockFor:'',cart:{},cat:'all',edit:null,me:null,tok:null};
 try{S.tok=localStorage.getItem('dbm_tok')}catch(e){}
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3000)}
 async function api(path,method='GET',body){
@@ -244,7 +247,7 @@ function delR(id){if(confirm('Delete this feedback?'))go(async()=>{await api('/a
 function goCat(k){
  if(!S.me){mode('signup');show('auth');toast('Create an account to browse');return}
  show('shop');const KEYS={tool:['tool','subscri','vpn','netflix','stream']};const ks=KEYS[k]||[k];const c=S.C.find(x=>ks.some(y=>String(x.name).toLowerCase().includes(y)));
- if(c){S.cat=String(c.id);render();$('catalog').scrollIntoView({behavior:'smooth'})}
+ if(c){S.cat=String(c.id);loadPublic();$('catalog').scrollIntoView({behavior:'smooth'})}
  else{toast('Not listed yet. Ask us on WhatsApp');window.open('https://wa.me/2349133237159?text='+encodeURIComponent('Hi DeeBlaq’s Market, I am looking for '+k),'_blank')}}
 function themeNow(){return document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);$('theme').textContent=t==='dark'?'☀️':'🌙';try{localStorage.setItem('dbm_theme',t)}catch(e){}}
@@ -273,7 +276,7 @@ function nav(x){closeMenu();
  else jump({faq:'faq',support:'support',policy:'policy',contact:'contact',terms:'terms'}[x]||'faq')}
 function browse(){if(S.me){show('shop');setTimeout(()=>$('catalog').scrollIntoView({behavior:'smooth'}),60)}else{mode('signup');show('auth')}}
 function authBtn(){if(S.me)logout();else{mode('login');show('auth')}}
-function logout(){S.me=null;S.tok=null;S.P=[];S.C=[];S.cart={};S.AP=[];try{localStorage.removeItem('dbm_tok')}catch(e){}render();show('shop');toast('Logged out')}
+function logout(){S.me=null;S.tok=null;S.P=[];S.C=[];S.cart={};S.AP=[];S.known={};S.cat='all';S.q='';try{localStorage.removeItem('dbm_tok')}catch(e){}render();show('shop');toast('Logged out')}
 const prof=()=>S.me&&S.me.profile;const isAdmin=()=>!!(prof()&&prof().is_admin);
 let AM='login';
 const pwOk=p=>p.length>=8&&/[A-Za-z]/.test(p)&&/\d/.test(p);
@@ -301,15 +304,29 @@ async function loadMe(){try{S.me=await api('/api/me')}catch(e){S.me=null;S.tok=n
 function payOnline(){const a=$('pa').value;go(async()=>{const j=await api('/api/payments/start','POST',{amount:a});location.href=j.link})}
 function verifyPay(t){go(async()=>{const j=await api('/api/payments/verify?tx_ref='+encodeURIComponent(t));try{history.replaceState(null,'',location.pathname)}catch(e){}
  toast(j.credited?'Payment received. Your wallet is funded.':(j.status==='approved'?'Wallet already funded.':'Payment status: '+j.status));await loadMe();show('wallet')})}
-async function loadPublic(){if(!S.me)return;try{const [c,p]=await Promise.all([api('/api/categories'),api('/api/products')]);S.C=c.categories;S.P=p.products;S.loaded=true}catch(e){toast('Could not reach the store server')}render()}
+async function loadPublic(more){if(!S.me)return;try{if(!more||!S.C.length){const c=await api('/api/categories');S.C=c.categories}
+ const page=more===true?S.page+1:1;const j=await api('/api/products?page='+page+(S.cat!=='all'?'&category_id='+encodeURIComponent(S.cat):'')+(S.q?'&q='+encodeURIComponent(S.q):''));
+ S.P=page>1?S.P.concat(j.products):j.products;S.page=page;S.more=j.more;S.P.forEach(x=>{S.known[String(x.id)]=x});S.loaded=true}catch(e){toast('Could not reach the store server')}render()}
+function setCat(id){S.cat=String(id);loadPublic()}
+let _t1,_t2,_t3;
+function searchSoon(v){clearTimeout(_t1);_t1=setTimeout(()=>{S.q=v.trim();loadPublic()},350)}
+function apSearch(v){clearTimeout(_t2);_t2=setTimeout(()=>{S.apq=v.trim();go(async()=>{await loadAP();render()})},350)}
+function custSearch(v){clearTimeout(_t3);_t3=setTimeout(()=>{S.cq=v.trim();go(async()=>{await loadCust();render()})},350)}
+function toggDep(){S.depAll=!S.depAll;go(async()=>{await loadAD();render()})}
+function toggOrd(){S.ordAll=!S.ordAll;go(async()=>{await loadAO();render()})}
+async function loadAP(more){const page=more?S.apPage+1:1;const j=await api('/api/admin/products?page='+page+(S.apq?'&q='+encodeURIComponent(S.apq):''));S.AP=more?S.AP.concat(j.products):j.products;S.apPage=page;S.apMore=j.more;if(more)render()}
+async function loadAD(more){const page=more?S.depPage+1:1;const j=await api('/api/admin/deposits?page='+page+(S.depAll?'':'&status=pending'));S.adep=more?S.adep.concat(j.deposits):j.deposits;S.depPage=page;S.depMore=j.more;if(more)render()}
+async function loadAO(more){const page=more?S.ordPage+1:1;const j=await api('/api/admin/orders?page='+page+(S.ordAll?'':'&status=paid'));S.aord=more?S.aord.concat(j.orders):j.orders;S.ordPage=page;S.ordMore=j.more;if(more)render()}
+async function loadStock(){const j=await api('/api/admin/stock');S.stock=j.stock}
+async function loadCust(more){const page=more?S.custPage+1:1;const j=await api('/api/admin/customers?page='+page+(S.cq?'&q='+encodeURIComponent(S.cq):''));S.cust=more?S.cust.concat(j.customers):j.customers;S.custPage=page;S.custMore=j.more;S.custTotal=j.total;if(more)render()}
 async function loadPrivate(){if(!S.me)return;try{const [d,o]=await Promise.all([api('/api/deposits'),api('/api/orders')]);S.dep=d.deposits;S.ord=o.orders;
- if(isAdmin()){const [ap,ad,ao,st]=await Promise.all([api('/api/admin/products'),api('/api/admin/deposits'),api('/api/admin/orders'),api('/api/admin/stock')]);S.AP=ap.products;S.adep=ad.deposits;S.aord=ao.orders;S.stock=st.stock}}catch(e){toast(e.message)}render()}
+ if(isAdmin()){await Promise.all([loadAP(),loadAD(),loadAO(),loadStock(),loadCust()])}}catch(e){toast(e.message)}render()}
 async function refresh(){await Promise.all([loadPublic(),loadPrivate(),loadMe()])}
 function render(){
- if(S.loaded)Object.keys(S.cart).forEach(i=>{if(!ck(i))delete S.cart[i]});
  const rk=S.R.map(r=>r.id).join(',');$('revs').classList.toggle('hid',!S.R.length);
  if(rk!==S._rk){S._rk=rk;let it=[...S.R];while(it.length&&it.length<6)it=it.concat(S.R);const set=it.map(r=>`<div class="rev"><div class="st">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div><p>“${esc(r.message)}”</p><b>${esc(r.name)}</b></div>`).join('');$('revs').innerHTML=S.R.length?`<div class="marq"><div class="track" style="--d:${Math.max(30,it.length*6)}s">${set}${set}</div></div>`:''}
- $('obox').innerHTML=!S.me?'<p>Please <a href="#" onclick="show(\'auth\');return false">log in</a> to see your purchases.</p>':(S.ord.map(o=>{const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel"><b>${it}</b><br><span class="mu">${N(o.total)} · ${esc(new Date(o.created_at).toLocaleDateString())}</span> <span class="tag">${o.status==='delivered'?'Delivered':'Processing'}</span>${o.note?'<br><span class="mu">Your note: '+esc(o.note)+'</span>':''}${o.status==='delivered'?(o.delivery?'<div class="cred"><b>🔑 Your details</b><pre id="cr-'+o.id+'">'+esc(o.delivery)+'</pre><button class="sm" onclick="copyCr(\''+o.id+'\')">📋 Copy</button></div>':'<p class="mu">Delivered. Contact support if you need help.</p>'):'<p class="mu">We are preparing your order. Your details will appear here once it is delivered.</p>'}</div>`}).join('')||'<p class="mu">No purchases yet.</p>');
+ $('obox').innerHTML=!S.me?'<p>Please <a href="#" onclick="show(\'auth\');return false">log in</a> to see your purchases.</p>':(S.ord.map(o=>{const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel"><b>${it}</b><br><span class="mu">${N(o.total)} · ${esc(new Date(o.created_at).toLocaleDateString())}</span> <span class="tag">${o.status==='delivered'?'Delivered':'Processing'}</span>${o.note?'<br><span class="mu">Your note: '+esc(o.note)+'</span>':''}${o.status==='delivered'?(o.delivery?'<div class="cred"><b>🔑 Your details</b><pre id="cr-'+o.id+'">'+esc(o.delivery)+'</pre><button class="sm" onclick="copyCr(\''+o.id+'\')">📋 Copy</button></div>':'<p class="mu">Delivered. Contact support if you need help.</p>'):(o.delivery?'<div class="cred"><b>🔑 Ready so far</b><pre id="cr-'+o.id+'">'+esc(o.delivery)+'</pre><button class="sm" onclick="copyCr(\''+o.id+'\')">📋 Copy</button></div><p class="mu">We are preparing the rest of your order.</p>':'<p class="mu">We are preparing your order. Your details will appear here once it is delivered.</p>')}</div>`}).join('')||'<p class="mu">No purchases yet.</p>');
+ $('more').classList.toggle('hid',!S.more);
  $('catalog').classList.toggle('hid',!S.me);$('gate').classList.toggle('hid',!!S.me);
  $('cc').textContent=Object.values(S.cart).reduce((a,b)=>a+b,0);
  $('lb').textContent=S.me?'Logout':'Login';$('sb').classList.toggle('hid',!!S.me);
@@ -317,9 +334,9 @@ function render(){
  const wl=$('welcome');wl.classList.toggle('hid',!S.me);if(S.me)wl.innerHTML='<b>Welcome'+((prof()&&prof().first_name)?', '+esc(prof().first_name):'')+' 👋</b><br><span class="mu">Browse our categories and prices below.</span>';
  const b=$('bal');b.classList.toggle('hid',!S.me);b.textContent=((prof()&&prof().first_name)?prof().first_name+' · ':'')+'Balance '+N(prof()&&prof().balance);
  $('admb').classList.toggle('hid',!isAdmin());
- $('chips').innerHTML=[{id:'all',name:'All'},...S.C].map(c=>`<button class="chip ${String(S.cat)===String(c.id)?'on':''}" onclick="S.cat='${esc(c.id)}';render()">${esc(c.name)}</button>`).join('');
+ $('chips').innerHTML=[{id:'all',name:'All'},...S.C].map(c=>`<button class="chip ${String(S.cat)===String(c.id)?'on':''}" onclick="setCat('${esc(c.id)}')">${esc(c.name)}</button>`).join('');
  const L=S.P.filter(p=>S.cat==='all'||String(p.category_id)===String(S.cat));
- $('grid').innerHTML=L.length?L.map(p=>`<div class="card">${p.image_url?`<img src="${esc(p.image_url)}" alt="" onerror="this.outerHTML='<div class=ph>📦</div>'">`:'<div class="ph">📦</div>'}<div class="b"><span class="cat">${esc((S.C.find(c=>String(c.id)===String(p.category_id))||{}).name||'')}</span><b>${esc(p.name)}</b><span class="mu" style="white-space:pre-line">${esc(p.description||'')}</span>${planBlock(p)}<button onclick="add('${p.id}')">Add to cart</button></div></div>`).join(''):'<p class="mu">No products available yet. Order via WhatsApp for what you need.</p>';
+ $('grid').innerHTML=L.length?L.map(p=>`<div class="card">${p.image_url?`<img src="${esc(p.image_url)}" alt="" onerror="this.outerHTML='<div class=ph>📦</div>'">`:'<div class="ph">📦</div>'}<div class="b"><span class="cat">${esc((S.C.find(c=>String(c.id)===String(p.category_id))||{}).name||'')}</span><b>${esc(p.name)}</b><span class="mu" style="white-space:pre-line">${esc(p.description||'')}</span>${planBlock(p)}${stockBadge(p)}<button onclick="add('${p.id}')"${soldOut(p)?' disabled':''}>${soldOut(p)?'Out of stock':'Add to cart'}</button></div></div>`).join(''):'<p class="mu">No products available yet. Order via WhatsApp for what you need.</p>';
  const ids=Object.keys(S.cart).filter(i=>ck(i));let tot=0;
  $('cartbox').innerHTML=ids.length?ids.map(i=>{const c=ck(i);tot+=c.price*S.cart[i];return `<div class="row"><span>${esc(c.name)} × ${S.cart[i]}</span><span>${N(c.price*S.cart[i])} <button class="sm d" onclick="rm(decodeURIComponent('${encodeURIComponent(i)}'))">✕</button></span></div>`}).join('')+`<p><b>Total: ${N(tot)}</b></p><textarea rows="2" placeholder="Note for us (e.g. the email or number to recharge or subscribe)" oninput="S.note=this.value">${esc(S.note||'')}</textarea><button onclick="checkout()">Pay from wallet</button>`:'Your cart is empty.';
  $('walbox').innerHTML=!S.me?'<p>Please <a href="#" onclick="show(\'auth\');return false">log in</a> to use your wallet. You can also order via WhatsApp.</p>':`<p><b>Balance: ${N(prof().balance)}</b> <button class="s sm" onclick="show('orders')">📦 My purchases</button></p>${S.online?`<b>💳 Pay online</b><input id="pa" type="number" min="100" placeholder="Amount (₦)"><button onclick="payOnline()">💳 Pay with card, bank or USSD</button><p class="mu">Secure payment by Flutterwave. Your wallet is credited automatically.</p>`:''}<div class="panel" style="margin:0 0 12px"><b>🏦 Pay to this bank account</b><br><span class="mu">${BANK.name}</span><br><b style="font-size:24px;letter-spacing:1px">${BANK.no}</b> <button class="sm" onclick="copyAcct()">📋 Copy</button><br>${BANK.holder}<p class="mu" style="margin:8px 0 0">Send your money to this account, then enter the amount and your payment reference below and tap Submit deposit.</p></div><b>${S.online?'Or deposit by transfer':'Deposit funds'}</b><input id="da" type="number" min="1" placeholder="Amount (₦)"><input id="dr" placeholder="Payment reference / sender name"><button onclick="deposit()">Submit deposit</button><p class="mu">Send the payment, then submit it here. Your balance updates once we confirm it.</p><b>My deposits</b>${S.dep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)}</span><span class="tag">${esc(d.status)}</span></div>`).join('')||'<p class="mu">None yet.</p>'}<b>My orders</b>${S.ord.map(o=>`<div class="row"><span>${esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))}${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}</span><span>${N(o.total)} <span class="tag">${esc(o.status)}</span></span></div>`).join('')||'<p class="mu">None yet.</p>'}`;
@@ -328,36 +345,44 @@ function render(){
 function renderAdmin(){
  if(!$('v-admin').classList.contains('hid')||1){const sel=$('pc').value;$('pc').innerHTML=S.C.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');if(sel)$('pc').value=sel}
  $('pt').textContent=S.edit?'Edit product':'Add product';
- {const sv=$('sp').value;$('sp').innerHTML=S.AP.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');if(sv)$('sp').value=sv}
- $('stlist').innerHTML=S.stock.map(x=>{const p=S.AP.find(y=>String(y.id)===String(x.product_id));return `<div class="row"><span>${esc(p?p.name:x.product_id)}${x.plan?' ('+esc(x.plan)+')':''}</span><span class="tag">${x.count} in stock</span></div>`}).join('')||'<p class="mu">No stock added yet.</p>';
+ $('stlist').innerHTML=S.stock.map(x=>`<div class="row"><span>${esc(x.name||x.product_id)}${x.plan?' ('+esc(x.plan)+')':''}</span><span class="tag">${x.available} left of ${x.total}</span></div>`).join('')||'<p class="mu">No stock added yet.</p>';
  $('rlist').innerHTML=S.R.map(r=>`<div class="row"><span>${esc(r.name)}: ${esc(r.message)}</span><button class="sm d" onclick="delR('${r.id}')">Delete</button></div>`).join('')||'<p class="mu">None yet.</p>';
  $('clist').innerHTML=S.C.map(c=>`<div class="row"><span>${esc(c.name)}</span><button class="sm d" onclick="delC('${c.id}')">Delete</button></div>`).join('');
- $('plist').innerHTML=S.AP.map(p=>`<div class="row"><span>${esc(p.name)} · ${N(p.price)} ${p.available===false?'<span class="tag">hidden</span>':''}</span><span><button class="sm s" onclick="togg('${p.id}')">${p.available===false?'Show':'Hide'}</button> <button class="sm s" onclick="editP('${p.id}')">Edit</button> <button class="sm d" onclick="delP('${p.id}')">Delete</button></span></div>`).join('')||'<p class="mu">No products yet.</p>';
+ $('plist').innerHTML=S.AP.map(p=>`<div class="row"><span>${esc(p.name)} · ${N(p.price)}${p.quantity!=null?' · qty '+p.quantity:''} ${p.available===false?'<span class="tag">hidden</span>':''}</span><span><button class="sm s" onclick="stockFor('${p.id}')">📦 Stock</button> <button class="sm s" onclick="togg('${p.id}')">${p.available===false?'Show':'Hide'}</button> <button class="sm s" onclick="editP('${p.id}')">Edit</button> <button class="sm d" onclick="delP('${p.id}')">Delete</button></span></div>`).join('')||'<p class="mu">No products yet.</p>';
  $('dlist').innerHTML=S.adep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)} <span class="tag">${esc(d.status)}</span></span>${d.status==='pending'?`<span><button class="sm" onclick="dep2('${d.id}','approve')">Approve</button> <button class="sm d" onclick="dep2('${d.id}','reject')">Reject</button></span>`:''}</div>`).join('')||'<p class="mu">None.</p>';
- $('olist').innerHTML=S.aord.map(o=>{const pr=o.profiles||{};const who=esc(((pr.first_name||'')+' '+(pr.last_name||'')).trim())+(pr.phone?' · '+esc(pr.phone):'')+(pr.email?' · '+esc(pr.email):'');const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel" style="margin:8px 0"><b>${it}</b> · ${N(o.total)} <span class="tag">${esc(o.status)}</span><br><span class="mu">${who}</span>${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}${o.status!=='delivered'?`<textarea rows="3" placeholder="Paste the login details or delivery info here" oninput="S.dl['${o.id}']=this.value">${esc(S.dl[o.id]||'')}</textarea><button class="sm" onclick="deliv('${o.id}')">✅ Deliver to customer</button>`:`<textarea rows="3" placeholder="Add or change the details the customer sees" oninput="S.dl['${o.id}']=this.value">${esc(S.dl[o.id]!==undefined?S.dl[o.id]:(o.delivery||''))}</textarea><button class="sm" onclick="deliv('${o.id}')">💾 Update details</button>`}</div>`}).join('')||'<p class="mu">None.</p>';
+ $('dtog').textContent=S.depAll?'Show pending only':'Show all';$('otog').textContent=S.ordAll?'Show needs delivery only':'Show all';
+ $('apmore').classList.toggle('hid',!S.apMore);$('dmore').classList.toggle('hid',!S.depMore);$('omore').classList.toggle('hid',!S.ordMore);$('cmore').classList.toggle('hid',!S.custMore);
+ $('ctotal').textContent=S.custTotal;
+ $('custlist').innerHTML=S.cust.map(c=>`<div class="row"><span>${esc(((c.first_name||'')+' '+(c.last_name||'')).trim()||'(no name)')} · ${esc(c.email||'')}${c.phone?' · '+esc(c.phone):''}</span><span class="tag">${N(c.balance)}</span></div>`).join('')||'<p class="mu">No customers found.</p>';
+ $('olist').innerHTML=S.aord.map(o=>{const pr=o.profiles||{};const who=esc(((pr.first_name||'')+' '+(pr.last_name||'')).trim())+(pr.phone?' · '+esc(pr.phone):'')+(pr.email?' · '+esc(pr.email):'');const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel" style="margin:8px 0"><b>${it}</b> · ${N(o.total)} <span class="tag">${esc(o.status)}</span><br><span class="mu">${who}</span>${o.note?'<br><span class="mu">Note: '+esc(o.note)+'</span>':''}${o.status!=='delivered'?`<textarea rows="3" placeholder="Paste the login details or delivery info here" oninput="S.dl['${o.id}']=this.value">${esc(S.dl[o.id]!==undefined?S.dl[o.id]:(o.delivery||''))}</textarea><button class="sm" onclick="deliv('${o.id}')">✅ Deliver to customer</button>`:`<textarea rows="3" placeholder="Add or change the details the customer sees" oninput="S.dl['${o.id}']=this.value">${esc(S.dl[o.id]!==undefined?S.dl[o.id]:(o.delivery||''))}</textarea><button class="sm" onclick="deliv('${o.id}')">💾 Update details</button>`}</div>`}).join('')||'<p class="mu">None.</p>';
 }
 const done=async()=>{await Promise.all([loadPublic(),loadPrivate()])};
-const ck=k=>{const a=String(k).split('::'),id=a[0],plan=a.slice(1).join('::');const p=S.P.find(x=>String(x.id)===id);if(!p)return null;const pl=plan?(p.plans||[]).find(x=>x.label===plan):null;if(plan&&!pl)return null;return{p,plan,price:pl?Number(pl.price):Number(p.price),name:p.name+(plan?' ('+plan+')':'')}};
+const ck=k=>{const a=String(k).split('::'),id=a[0],plan=a.slice(1).join('::');const p=S.known[id];if(!p)return null;const pl=plan?(p.plans||[]).find(x=>x.label===plan):null;if(plan&&!pl)return null;return{p,plan,price:pl?Number(pl.price):Number(p.price),name:p.name+(plan?' ('+plan+')':'')}};
+function curPlan(p){const pl=Array.isArray(p.plans)?p.plans:[];return pl.length?(S.sel[p.id]||pl[0].label):''}
+function leftFor(p){if(p.quantity!=null)return p.quantity;const bp=p.by_plan,k=curPlan(p);if(bp&&Object.prototype.hasOwnProperty.call(bp,k))return bp[k];return null}
+function soldOut(p){return leftFor(p)===0}
+function stockBadge(p){const n=leftFor(p);return n==null?'':'<span class="tag">'+(n===0?'Out of stock':n+' in stock')+'</span>'}
 function planBlock(p){const pl=Array.isArray(p.plans)?p.plans:[];
  if(!pl.length)return '<span class="pr">'+N(p.price)+'</span>';
  const cur=S.sel[p.id]||pl[0].label,c=pl.find(x=>x.label===cur)||pl[0];
  return '<select onchange="S.sel[\''+p.id+'\']=this.value;render()">'+pl.map(x=>'<option value="'+esc(x.label)+'"'+(x.label===c.label?' selected':'')+'>'+esc(x.label)+' — '+N(x.price)+'</option>').join('')+'</select><span class="pr">'+N(c.price)+'</span>'}
-function add(id){if(!S.me)return show('auth');const p=S.P.find(x=>String(x.id)===String(id));const pl=p&&Array.isArray(p.plans)?p.plans:[];const plan=pl.length?(S.sel[id]||pl[0].label):'';const k=plan?id+'::'+plan:String(id);S.cart[k]=(S.cart[k]||0)+1;toast('Added to cart');render()}
+function add(id){if(!S.me)return show('auth');const p=S.known[String(id)];const pl=p&&Array.isArray(p.plans)?p.plans:[];const plan=pl.length?(S.sel[id]||pl[0].label):'';const k=plan?id+'::'+plan:String(id);S.cart[k]=(S.cart[k]||0)+1;toast('Added to cart');render()}
 function rm(id){delete S.cart[id];render()}
 function checkout(){if(!S.me){toast('Please log in to pay from your wallet');return show('auth')}
  go(async()=>{await api('/api/orders','POST',{items:Object.keys(S.cart).map(k=>{const a=k.split('::');return{product_id:a[0],plan:a.slice(1).join('::'),qty:S.cart[k]}}),note:S.note||''});S.cart={};S.note='';await Promise.all([loadMe(),loadPrivate()]);show('orders')},'Order placed! Your details will appear in My Purchases once delivered.')}
 function deposit(){go(async()=>{await api('/api/deposits','POST',{amount:$('da').value,reference:$('dr').value});await loadPrivate()},'Deposit submitted')}
-function clrP(){S.edit=null;['pn','pp','pi','pd','pl'].forEach(i=>$(i).value='');render()}
+function clrP(){S.edit=null;['pn','pp','pi','pd','pl','pq'].forEach(i=>$(i).value='');render()}
 function saveP(){const plans=$('pl').value.split('\n').map(l=>l.split('|')).map(a=>({label:(a[0]||'').trim(),price:Number((a[1]||'').replace(/[^0-9.]/g,''))})).filter(x=>x.label&&x.price>=0);
- const d={name:$('pn').value,price:plans.length?Math.min(...plans.map(x=>x.price)):$('pp').value,image_url:$('pi').value,category_id:$('pc').value||null,description:$('pd').value,plans};
+ const d={name:$('pn').value,price:plans.length?Math.min(...plans.map(x=>x.price)):$('pp').value,image_url:$('pi').value,category_id:$('pc').value||null,description:$('pd').value,plans,quantity:$('pq').value};
  go(async()=>{if(S.edit)await api('/api/admin/products/'+S.edit,'PUT',d);else await api('/api/admin/products','POST',d);clrP();await done()},'Saved')}
-function editP(id){const p=S.AP.find(x=>String(x.id)===String(id));S.edit=id;$('pn').value=p.name;$('pp').value=p.price;$('pi').value=p.image_url||'';$('pc').value=p.category_id||'';$('pd').value=p.description||'';$('pl').value=(p.plans||[]).map(x=>x.label+' | '+x.price).join('\n');scrollTo(0,0)}
+function editP(id){const p=S.AP.find(x=>String(x.id)===String(id));S.edit=id;$('pn').value=p.name;$('pp').value=p.price;$('pi').value=p.image_url||'';$('pc').value=p.category_id||'';$('pd').value=p.description||'';$('pl').value=(p.plans||[]).map(x=>x.label+' | '+x.price).join('\n');$('pq').value=p.quantity==null?'':p.quantity;scrollTo(0,0)}
 function delP(id){if(confirm('Delete this product?'))go(async()=>{await api('/api/admin/products/'+id,'DELETE');await done()})}
 function togg(id){const p=S.AP.find(x=>String(x.id)===String(id));go(async()=>{await api('/api/admin/products/'+id,'PUT',{available:p.available===false});await done()})}
 function addC(){const n=$('cn').value.trim();if(n)go(async()=>{await api('/api/admin/categories','POST',{name:n});$('cn').value='';await done()})}
 function delC(id){if(confirm('Delete category?'))go(async()=>{await api('/api/admin/categories/'+id,'DELETE');await done()})}
 function dep2(id,a){go(async()=>{await api(`/api/admin/deposits/${id}/${a}`,'POST');await Promise.all([loadPrivate(),loadMe()])})}
-function addStock(){go(async()=>{await api('/api/admin/stock','POST',{product_id:$('sp').value,plan:$('sl').value.trim(),lines:$('sd').value});$('sd').value='';await loadPrivate()},'Stock added')}
+function stockFor(id){S.stockFor=String(id);const p=S.AP.find(x=>String(x.id)===String(id));$('stfor').textContent=p?p.name:id;$('stfor').scrollIntoView({behavior:'smooth'})}
+function addStock(){if(!S.stockFor)return toast('Tap 📦 Stock on a product first');go(async()=>{await api('/api/admin/stock','POST',{product_id:S.stockFor,plan:$('sl').value.trim(),lines:$('sd').value});$('sd').value='';await loadPrivate()},'Stock added')}
 function deliv(id){const o=S.aord.find(x=>String(x.id)===String(id));const t=(S.dl[id]!==undefined?S.dl[id]:((o&&o.delivery)||'')).trim();if(!t&&!confirm('Deliver without any details?'))return;go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT',{delivery:t});delete S.dl[id];await loadPrivate()},'Delivered')}
 function copyCr(id){const e=$('cr-'+id);try{navigator.clipboard.writeText(e.textContent).then(()=>toast('Copied')).catch(()=>toast('Could not copy. Hold the text to copy it.'))}catch(x){toast('Could not copy. Hold the text to copy it.')}}
 try{const t=localStorage.getItem('dbm_theme');setTheme(t||themeNow())}catch(e){setTheme(themeNow())}
