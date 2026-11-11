@@ -86,6 +86,16 @@ details.faq p{margin:10px 0 0;color:var(--mu)}
 #fb-tg{bottom:calc(84px + env(safe-area-inset-bottom,0px));background:linear-gradient(135deg,#2aabee,#1c7fc0);box-shadow:0 10px 28px rgba(42,171,238,.45)}
 #theme{position:fixed;right:14px;bottom:calc(154px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;padding:0;font-size:22px;background:var(--card);color:var(--tx);border:1px solid var(--bd);box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:8}
 body.in .hero{display:none}
+/* Welcome pop-up (shown after a customer creates an account) */
+.wp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
+.wp-overlay.show{display:flex}
+.wp-box{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:18px;max-width:360px;width:100%;padding:24px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.wp-box h2{margin:0 0 8px;font-size:22px}
+.wp-box p{margin:0 0 18px;color:var(--mu);font-size:15px;line-height:1.45}
+.wp-box a{color:#229ED9;font-weight:700}
+.wp-actions{display:flex;gap:10px}
+.wp-actions button{flex:1;padding:12px;border-radius:10px}
+.wp-actions .wp-ok{background:#229ED9;color:#fff}
 </style></head><body>
 <header>
  <div class="logo">🛒 DeeBlaq’s Market</div>
@@ -230,6 +240,17 @@ body.in .hero{display:none}
 <a id="fb-wa" class="fab" href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg viewBox="0 0 24 24"><path d="M12.04 2a9.93 9.93 0 0 0-8.5 15.03L2 22l5.1-1.5A9.94 9.94 0 1 0 12.04 2zm0 18.2a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-3.02.88.9-2.94-.2-.31a8.2 8.2 0 1 1 6.8 3.69zm4.5-6.14c-.25-.12-1.46-.72-1.69-.8-.23-.09-.39-.12-.56.12-.16.25-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.04-.38-1.98-1.22-.73-.65-1.23-1.46-1.37-1.71-.14-.25-.02-.38.1-.5.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07s.89 2.4 1.01 2.56c.12.17 1.75 2.67 4.23 3.74.59.25 1.05.4 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.2-.58.2-1.07.14-1.18-.06-.1-.23-.16-.48-.29z"/></svg></a>
 <button id="theme" onclick="toggleTheme()" aria-label="Switch dark or light mode">🌙</button>
 <div id="toast"></div>
+<!-- Welcome pop-up (shown after a customer creates an account) -->
+<div class="wp-overlay" id="wpOverlay" role="dialog" aria-modal="true" aria-labelledby="wpTitle">
+ <div class="wp-box">
+  <h2 id="wpTitle">Welcome! 🎉</h2>
+  <p>Welcome to DeeBlaq’s Market. Visit our <a id="wpTg" href="#" target="_blank" rel="noopener">Telegram</a> for more updates and support.</p>
+  <div class="wp-actions">
+   <button type="button" class="s" onclick="hideWelcomePopup()">Cancel</button>
+   <button type="button" class="wp-ok" onclick="hideWelcomePopup()">Got it, thanks</button>
+  </div>
+ </div>
+</div>
 <script>
 const API="https://deeblaqs-market-new-backend.onrender.com";
 const $=id=>document.getElementById(id),N=n=>'₦'+Number(n||0).toLocaleString();
@@ -297,7 +318,7 @@ function authGo(){
  if(AM==='signup'){const f=$('sf').value.trim(),l=$('sl').value.trim();
   if(!f||!l)return toast('Enter your first and last name');
   if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
-  return go(async()=>{await api('/api/auth/signup','POST',{first_name:f,last_name:l,phone:$('sp').value.trim(),email:e,password:p});const t=await api('/api/auth/login','POST',{email:e,password:p});S.tok=t.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(x){}$('ap').value='';await loadMe();show('shop')},'Welcome to DeeBlaq’s Market!')}
+  return go(async()=>{await api('/api/auth/signup','POST',{first_name:f,last_name:l,phone:$('sp').value.trim(),email:e,password:p});const t=await api('/api/auth/login','POST',{email:e,password:p});S.tok=t.access_token;try{localStorage.setItem('dbm_tok',S.tok)}catch(x){}$('ap').value='';await loadMe();show('shop');showWelcomePopup()},'Welcome to DeeBlaq’s Market!')}
  if(AM==='forgot')return go(async()=>{const j=await api('/api/auth/forgot','POST',{email:e});mode('reset',j.message);$('ae').value=e},'Code sent');
  if(AM==='reset'){if(!pwOk(p))return toast('Password needs 8+ characters with letters and numbers');
   return go(async()=>{const j=await api('/api/auth/reset','POST',{email:e,code:$('ac').value.trim(),password:p});$('ap').value='';$('ac').value='';mode('login',j.message)},'Password changed')}}
@@ -391,8 +412,14 @@ function stockFor(id){S.stockFor=String(id);const p=S.AP.find(x=>String(x.id)===
 function addStock(){if(!S.stockFor)return toast('Tap 📦 Stock on a product first');go(async()=>{await api('/api/admin/stock','POST',{product_id:S.stockFor,plan:$('sl').value.trim(),lines:$('sd').value});$('sd').value='';await loadPrivate()},'Stock added')}
 function deliv(id){const o=S.aord.find(x=>String(x.id)===String(id));const t=(S.dl[id]!==undefined?S.dl[id]:((o&&o.delivery)||'')).trim();if(!t&&!confirm('Deliver without any details?'))return;go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT',{delivery:t});delete S.dl[id];await loadPrivate()},'Delivered')}
 function copyCr(id){const e=$('cr-'+id);try{navigator.clipboard.writeText(e.textContent).then(()=>toast('Copied')).catch(()=>toast('Could not copy. Hold the text to copy it.'))}catch(x){toast('Could not copy. Hold the text to copy it.')}}
+/* Welcome pop-up: shown after a customer creates an account */
+function showWelcomePopup(){$('wpOverlay').classList.add('show')}
+function hideWelcomePopup(){$('wpOverlay').classList.remove('show')}
+$('wpOverlay').addEventListener('click',e=>{if(e.target===$('wpOverlay'))hideWelcomePopup()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hideWelcomePopup()});
 try{const t=localStorage.getItem('dbm_theme');setTheme(t||themeNow())}catch(e){setTheme(themeNow())}
 $('yr').textContent=new Date().getFullYear();$('fb-wa').href='https://wa.me/'+SUP.wa;$('fb-tg').href='https://t.me/'+SUP.tg;$('fb-tg').classList.toggle('hid',!SUP.tg);
+$('wpTg').href='https://t.me/'+SUP.tg;
 $('b-tg').classList.toggle('hid',!SUP.tg);$('b-mail').classList.toggle('hid',!SUP.mail);
 try{S.pendingTx=new URLSearchParams(location.search).get('tx_ref')}catch(e){}
 api('/api/payments/config').then(j=>{S.online=j.online;render()}).catch(()=>{});
