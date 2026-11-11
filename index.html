@@ -197,6 +197,18 @@ body.in .hero{display:none}
 
  <section id="v-cart" class="hid"><h2>Your Cart</h2><div class="panel" id="cartbox"></div><button class="s" onclick="show('shop')">← Keep shopping</button></section>
 
+ <section id="v-pay" class="hid"><h2>Complete your payment</h2>
+  <div class="panel"><b id="py-item"></b><br><span class="mu">Amount to pay:</span> <b id="py-amt"></b></div>
+  <div class="panel"><b>🏦 Send your payment to this account</b><br><span class="mu" id="py-bank"></span><br><b id="py-no" style="font-size:24px;letter-spacing:1px"></b> <button class="sm" onclick="copyAcct()">📋 Copy</button><br><span id="py-holder"></span><p class="mu" style="margin:8px 0 0"><b>Pay exactly the amount shown above</b>, then upload your receipt after payment.</p></div>
+  <div class="panel"><b>🧾 Attach your receipt</b><p class="mu">After you pay, upload a screenshot of your payment receipt. We confirm it and credit your wallet.</p>
+   <input id="py-amount" type="number" min="1" placeholder="Amount you paid (₦)">
+   <input id="py-ref" placeholder="Sender name / reference (optional)">
+   <input id="py-file" type="file" accept="image/*" onchange="pickReceipt(this)">
+   <img id="py-prev" class="hid" alt="Receipt preview" style="max-width:100%;border-radius:10px;margin-top:8px">
+   <button id="py-btn" onclick="submitReceipt()" style="margin-top:8px">📤 Submit receipt</button>
+   <p class="mu">After the admin approves your payment, you can continue your purchase: open your cart and tap Pay from wallet.</p></div>
+  <button class="s" onclick="show('cart')">🧺 Go to cart</button> <button class="s" onclick="show('shop')">← Back</button></section>
+
  <section id="v-orders" class="hid"><h2>📦 My Purchases</h2><p class="mu">Your login details and delivery information appear here after your order is delivered.</p><div id="obox"></div><button class="s" onclick="show('shop')">← Back</button></section>
 <section id="v-wallet" class="hid"><h2>My Wallet &amp; Orders</h2>
   <div class="panel" id="walbox"></div><button class="s" onclick="show('shop')">← Back</button></section>
@@ -262,8 +274,8 @@ async function api(path,method='GET',body){
  const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(S.tok?{Authorization:'Bearer '+S.tok}:{})},body:body?JSON.stringify(body):undefined});
  const j=await r.json().catch(()=>({}));if(r.status===401&&S.tok){S.tok=null;S.me=null;try{localStorage.removeItem('dbm_tok')}catch(e){}render()}if(!r.ok)throw new Error(j.error||'Request failed');return j}
 const go=async(f,ok)=>{try{await f();if(ok)toast(ok)}catch(e){toast(e.message)}};
-const VIEWS=['shop','auth','cart','wallet','orders','admin'];
-function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);if(v==='wallet'||v==='admin'||v==='orders')loadPrivate();render()}
+const VIEWS=['shop','auth','cart','pay','wallet','orders','admin'];
+function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);if(v==='pay')prepPay();if(v==='wallet'||v==='admin'||v==='orders')loadPrivate();render()}
 async function loadReviews(){try{const j=await api('/api/reviews');S.R=j.reviews}catch(e){}render()}
 function addR(){go(async()=>{await api('/api/admin/reviews','POST',{name:$('rn').value,message:$('rm').value,rating:$('rr').value});$('rn').value='';$('rm').value='';await loadReviews()},'Feedback added')}
 function delR(id){if(confirm('Delete this feedback?'))go(async()=>{await api('/api/admin/reviews/'+id,'DELETE');await loadReviews()})}
@@ -275,7 +287,7 @@ function goCat(k){
 function themeNow(){return document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);$('theme').textContent=t==='dark'?'☀️':'🌙';try{localStorage.setItem('dbm_theme',t)}catch(e){}}
 function toggleTheme(){setTheme(themeNow()==='dark'?'light':'dark')}
-const BANK={name:'UNITED BANK OF AFRICA (UBA)',no:'2296102813',holder:'OSARODION JUDE OSAMAMWONDE'};
+const BANK={name:'PALMPAY',no:'9133237159',holder:'HENRY OMOREGIE'};
 function copyAcct(){try{navigator.clipboard.writeText(BANK.no).then(()=>toast('Account number copied')).catch(()=>toast('Could not copy. Hold the number to copy it.'))}catch(e){toast('Could not copy. Hold the number to copy it.')}}
 const SUP={wa:'2349133237159',tg:'deeblaqsmarketsupport',mail:'Deeblaqsmarkets@gmail.com'}; /* put your Telegram username (no @) and support email here */
 function report(k){
@@ -372,7 +384,7 @@ function renderAdmin(){
  $('rlist').innerHTML=S.R.map(r=>`<div class="row"><span>${esc(r.name)}: ${esc(r.message)}</span><button class="sm d" onclick="delR('${r.id}')">Delete</button></div>`).join('')||'<p class="mu">None yet.</p>';
  $('clist').innerHTML=S.C.map(c=>`<div class="row"><span>${esc(c.name)}</span><button class="sm d" onclick="delC('${c.id}')">Delete</button></div>`).join('');
  $('plist').innerHTML=S.AP.map(p=>`<div class="row"><span>${esc(p.name)} · ${N(p.price)}${p.quantity!=null?' · qty '+p.quantity:''} ${p.available===false?'<span class="tag">hidden</span>':''}</span><span><button class="sm s" onclick="stockFor('${p.id}')">📦 Stock</button> <button class="sm s" onclick="togg('${p.id}')">${p.available===false?'Show':'Hide'}</button> <button class="sm s" onclick="editP('${p.id}')">Edit</button> <button class="sm d" onclick="delP('${p.id}')">Delete</button></span></div>`).join('')||'<p class="mu">No products yet.</p>';
- $('dlist').innerHTML=S.adep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)} <span class="tag">${esc(d.status)}</span></span>${d.status==='pending'?`<span><button class="sm" onclick="dep2('${d.id}','approve')">Approve</button> <button class="sm d" onclick="dep2('${d.id}','reject')">Reject</button></span>`:''}</div>`).join('')||'<p class="mu">None.</p>';
+ $('dlist').innerHTML=S.adep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)} <span class="tag">${esc(d.status)}</span>${rcpt(d)}</span>${d.status==='pending'?`<span><button class="sm" onclick="dep2('${d.id}','approve')">Approve</button> <button class="sm d" onclick="dep2('${d.id}','reject')">Reject</button></span>`:''}</div>`).join('')||'<p class="mu">None.</p>';
  $('dtog').textContent=S.depAll?'Show pending only':'Show all';$('otog').textContent=S.ordAll?'Show needs delivery only':'Show all';
  $('apmore').classList.toggle('hid',!S.apMore);$('dmore').classList.toggle('hid',!S.depMore);$('omore').classList.toggle('hid',!S.ordMore);$('cmore').classList.toggle('hid',!S.custMore);
  $('ctotal').textContent=S.custTotal;
@@ -389,8 +401,28 @@ function planBlock(p){const pl=Array.isArray(p.plans)?p.plans:[];
  if(!pl.length)return '<span class="pr">'+N(p.price)+'</span>';
  const cur=S.sel[p.id]||pl[0].label,c=pl.find(x=>x.label===cur)||pl[0];
  return '<select onchange="S.sel[\''+p.id+'\']=this.value;render()">'+pl.map(x=>'<option value="'+esc(x.label)+'"'+(x.label===c.label?' selected':'')+'>'+esc(x.label)+' — '+N(x.price)+'</option>').join('')+'</select><span class="pr">'+N(c.price)+'</span>'}
-function add(id,buy){if(!S.me){mode('login');return show('auth')}const p=S.known[String(id)];const pl=p&&Array.isArray(p.plans)?p.plans:[];const plan=pl.length?(S.sel[id]||pl[0].label):'';const k=plan?id+'::'+plan:String(id);if(buy){S.cart={};S.cart[k]=1}else{S.cart[k]=(S.cart[k]||0)+1;toast('Added to cart')}show('cart')}
+function add(id,buy){if(!S.me){mode('login');return show('auth')}const p=S.known[String(id)];const pl=p&&Array.isArray(p.plans)?p.plans:[];const plan=pl.length?(S.sel[id]||pl[0].label):'';const k=plan?id+'::'+plan:String(id);if(buy){S.cart={};S.cart[k]=1}else{S.cart[k]=(S.cart[k]||0)+1;toast('Added to cart')}show(buy?'pay':'cart')}
 function buyNow(id){add(id,true)}
+function cartTotal(){let t=0;Object.keys(S.cart).forEach(i=>{const c=ck(i);if(c)t+=c.price*S.cart[i]});return t}
+function prepPay(){const ids=Object.keys(S.cart).filter(i=>ck(i));const tot=cartTotal();
+ $('py-item').textContent=ids.map(i=>ck(i).name+' × '+S.cart[i]).join(', ')||'Your order';
+ $('py-amt').textContent=N(tot);$('py-amount').value=tot||'';
+ $('py-bank').textContent=BANK.name;$('py-no').textContent=BANK.no;$('py-holder').textContent=BANK.holder;
+ S.receipt=null;$('py-file').value='';$('py-prev').classList.add('hid');$('py-btn').disabled=false}
+function pickReceipt(inp){const f=inp.files&&inp.files[0];if(!f)return;
+ if(!/^image\//.test(f.type)){inp.value='';return toast('Please choose an image (screenshot or photo)')}
+ const fr=new FileReader();fr.onerror=()=>toast('Could not read that image');
+ fr.onload=()=>{const im=new Image();im.onerror=()=>toast('Could not read that image');
+  im.onload=()=>{const m=900,r=Math.min(1,m/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);
+   c.getContext('2d').drawImage(im,0,0,c.width,c.height);S.receipt=c.toDataURL('image/jpeg',0.7);const pv=$('py-prev');pv.src=S.receipt;pv.classList.remove('hid')};
+  im.src=fr.result};fr.readAsDataURL(f)}
+function submitReceipt(){const a=Number($('py-amount').value);
+ if(!a||a<=0)return toast('Enter the amount you paid');
+ if(!S.receipt)return toast('Please attach your receipt screenshot');
+ $('py-btn').disabled=true;
+ go(async()=>{try{await api('/api/deposits','POST',{amount:a,reference:$('py-ref').value.trim()||'Receipt screenshot',receipt:S.receipt})}finally{$('py-btn').disabled=false}
+  S.receipt=null;await loadPrivate();show('wallet')},'Receipt sent. We will confirm it and credit your wallet.')}
+function rcpt(d){return d.receipt&&/^(data:image\/|https?:)/.test(d.receipt)?'<br><img src="'+esc(d.receipt)+'" alt="Receipt" style="max-width:120px;border-radius:8px;margin-top:6px;cursor:pointer" onclick="this.style.maxWidth=this.style.maxWidth===\'100%\'?\'120px\':\'100%\'">':''}
 function rm(id){delete S.cart[id];render()}
 function checkout(){if(!S.me){toast('Please log in to pay from your wallet');return show('auth')}
  go(async()=>{await api('/api/orders','POST',{items:Object.keys(S.cart).map(k=>{const a=k.split('::');return{product_id:a[0],plan:a.slice(1).join('::'),qty:S.cart[k]}}),note:S.note||''});S.cart={};S.note='';await Promise.all([loadMe(),loadPrivate()]);show('orders')},'Order placed! Your details will appear in My Purchases once delivered.')}
