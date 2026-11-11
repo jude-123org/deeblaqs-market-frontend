@@ -384,7 +384,7 @@ function renderAdmin(){
  $('rlist').innerHTML=S.R.map(r=>`<div class="row"><span>${esc(r.name)}: ${esc(r.message)}</span><button class="sm d" onclick="delR('${r.id}')">Delete</button></div>`).join('')||'<p class="mu">None yet.</p>';
  $('clist').innerHTML=S.C.map(c=>`<div class="row"><span>${esc(c.name)}</span><button class="sm d" onclick="delC('${c.id}')">Delete</button></div>`).join('');
  $('plist').innerHTML=S.AP.map(p=>`<div class="row"><span>${esc(p.name)} · ${N(p.price)}${p.quantity!=null?' · qty '+p.quantity:''} ${p.available===false?'<span class="tag">hidden</span>':''}</span><span><button class="sm s" onclick="stockFor('${p.id}')">📦 Stock</button> <button class="sm s" onclick="togg('${p.id}')">${p.available===false?'Show':'Hide'}</button> <button class="sm s" onclick="editP('${p.id}')">Edit</button> <button class="sm d" onclick="delP('${p.id}')">Delete</button></span></div>`).join('')||'<p class="mu">No products yet.</p>';
- $('dlist').innerHTML=S.adep.map(d=>`<div class="row"><span>${N(d.amount)} · ${esc(d.reference)} <span class="tag">${esc(d.status)}</span>${rcpt(d)}</span>${d.status==='pending'?`<span><button class="sm" onclick="dep2('${d.id}','approve')">Approve</button> <button class="sm d" onclick="dep2('${d.id}','reject')">Reject</button></span>`:''}</div>`).join('')||'<p class="mu">None.</p>';
+ $('dlist').innerHTML=S.adep.map(d=>`<div class="row"><span><b>${who(d)}</b><br>${N(d.amount)} · ${esc(d.reference)} <span class="tag">${esc(d.status)}</span>${rcpt(d)}</span>${d.status==='pending'?`<span><button class="sm" onclick="dep2('${d.id}','approve')">Approve</button> <button class="sm d" onclick="dep2('${d.id}','reject')">Reject</button></span>`:''}</div>`).join('')||'<p class="mu">None.</p>';
  $('dtog').textContent=S.depAll?'Show pending only':'Show all';$('otog').textContent=S.ordAll?'Show needs delivery only':'Show all';
  $('apmore').classList.toggle('hid',!S.apMore);$('dmore').classList.toggle('hid',!S.depMore);$('omore').classList.toggle('hid',!S.ordMore);$('cmore').classList.toggle('hid',!S.custMore);
  $('ctotal').textContent=S.custTotal;
@@ -422,7 +422,9 @@ function submitReceipt(){const a=Number($('py-amount').value);
  $('py-btn').disabled=true;
  go(async()=>{try{await api('/api/deposits','POST',{amount:a,reference:$('py-ref').value.trim()||'Receipt screenshot',receipt:S.receipt})}finally{$('py-btn').disabled=false}
   S.receipt=null;await loadPrivate();show('wallet')},'Receipt sent. We will confirm it and credit your wallet.')}
-function rcpt(d){return d.receipt&&/^(data:image\/|https?:)/.test(d.receipt)?'<br><img src="'+esc(d.receipt)+'" alt="Receipt" style="max-width:120px;border-radius:8px;margin-top:6px;cursor:pointer" onclick="this.style.maxWidth=this.style.maxWidth===\'100%\'?\'120px\':\'100%\'">':''}
+function who(d){const p=d.profiles||{};const n=((p.first_name||'')+' '+(p.last_name||'')).trim();return esc(n||p.email||'Customer')+(p.phone?' · '+esc(p.phone):'')+(p.email&&n?' · '+esc(p.email):'')}
+function rcpt(d){if(!d.has_receipt)return '';const id=String(d.id);const img=(S.rc||{})[id];return '<br>'+(img&&/^data:image\//.test(img)?'<img src="'+esc(img)+'" alt="Receipt" style="max-width:100%;border-radius:8px;margin-top:6px">':'<button class="sm s" onclick="viewReceipt(\''+esc(id)+'\')">🧾 View receipt</button>')}
+function viewReceipt(id){go(async()=>{const j=await api('/api/admin/deposits/'+encodeURIComponent(id)+'/receipt');S.rc=S.rc||{};S.rc[id]=j.receipt;render()})}
 function rm(id){delete S.cart[id];render()}
 function checkout(){if(!S.me){toast('Please log in to pay from your wallet');return show('auth')}
  go(async()=>{await api('/api/orders','POST',{items:Object.keys(S.cart).map(k=>{const a=k.split('::');return{product_id:a[0],plan:a.slice(1).join('::'),qty:S.cart[k]}}),note:S.note||''});S.cart={};S.note='';await Promise.all([loadMe(),loadPrivate()]);show('orders')},'Order placed! Your details will appear in My Purchases once delivered.')}
