@@ -34,8 +34,8 @@ input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-r
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .mu{color:var(--mu);font-size:13px}.tag{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--bd)}
-#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:9;max-width:90%}
-footer{text-align:center;padding:26px 14px 160px;color:var(--mu)}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:9;max-width:90%}
+footer{text-align:center;padding:26px 14px 240px;color:var(--mu)}
 .hid{display:none!important}
 button:disabled{opacity:.5;cursor:not-allowed}
 .cred{background:var(--bg);border:1px dashed var(--ac);border-radius:12px;padding:10px;margin-top:10px}.cred pre{white-space:pre-wrap;word-break:break-all;margin:6px 0;font:inherit}
@@ -82,9 +82,9 @@ details.faq p{margin:10px 0 0;color:var(--mu)}
 .fab{position:fixed;right:14px;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:8;text-decoration:none}
 .fab::after{content:'';position:absolute;right:1px;bottom:1px;width:13px;height:13px;border-radius:50%;background:#34d399;border:2px solid #fff}
 .fab svg{width:28px;height:28px;fill:#fff}
-#fb-wa{bottom:calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(135deg,#25d366,#0d7a52);box-shadow:0 10px 28px rgba(37,211,102,.45)}
-#fb-tg{bottom:calc(84px + env(safe-area-inset-bottom,0px));background:linear-gradient(135deg,#2aabee,#1c7fc0);box-shadow:0 10px 28px rgba(42,171,238,.45)}
-#theme{position:fixed;right:14px;bottom:calc(154px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;padding:0;font-size:22px;background:var(--card);color:var(--tx);border:1px solid var(--bd);box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:8}
+#fb-wa{bottom:calc(82px + env(safe-area-inset-bottom,0px));background:linear-gradient(135deg,#25d366,#0d7a52);box-shadow:0 10px 28px rgba(37,211,102,.45)}
+#fb-tg{bottom:calc(150px + env(safe-area-inset-bottom,0px));background:linear-gradient(135deg,#2aabee,#1c7fc0);box-shadow:0 10px 28px rgba(42,171,238,.45)}
+#theme{position:fixed;right:14px;bottom:calc(220px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;padding:0;font-size:22px;background:var(--card);color:var(--tx);border:1px solid var(--bd);box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:8}
 body.in .hero{display:none}
 /* Welcome pop-up (shown after a customer creates an account) */
 .wp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
@@ -96,6 +96,14 @@ body.in .hero{display:none}
 .wp-actions{display:flex;gap:10px}
 .wp-actions button{flex:1;padding:12px;border-radius:10px}
 .wp-actions .wp-ok{background:#229ED9;color:#fff}
+#dbox .promo{margin-bottom:14px}
+#dbox .why{margin-bottom:6px}
+/* Bottom navigation bar */
+#bnav{position:fixed;left:0;right:0;bottom:0;z-index:7;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -6px 20px rgba(0,0,0,.12)}
+#bnav button{flex:1;background:transparent;color:var(--mu);border-radius:0;padding:9px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:700}
+#bnav button .ni{font-size:22px;line-height:1}
+#bnav button.on{color:var(--ac)}
+#bnav button.on .ni{transform:translateY(-1px)}
 /* Loading screen */
 #loader{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;background:var(--bg);opacity:.96;text-align:center;padding:20px}
 #loader.on{display:flex}
@@ -206,6 +214,8 @@ body.in .hero{display:none}
 
  <section id="v-cart" class="hid"><h2>Your Cart</h2><div class="panel" id="cartbox"></div><button class="s" onclick="show('shop')">← Keep shopping</button></section>
 
+ <section id="v-dash" class="hid"><h2>📊 My Dashboard</h2><div id="dbox"></div><button class="s" onclick="show('shop')">← Back</button></section>
+
  <section id="v-pay" class="hid"><h2>Complete your payment</h2>
   <div class="panel"><b id="py-item"></b><br><span class="mu">Amount to pay:</span> <b id="py-amt"></b></div>
   <div class="panel"><b>🏦 Send your payment to this account</b><br><span class="mu" id="py-bank"></span><br><b id="py-no" style="font-size:24px;letter-spacing:1px"></b> <button class="sm" onclick="copyAcct()">📋 Copy</button><br><span id="py-holder"></span><p class="mu" style="margin:8px 0 0"><b>Pay exactly the amount shown above</b>, then upload your receipt after payment.</p></div>
@@ -223,6 +233,7 @@ body.in .hero{display:none}
   <div class="panel" id="walbox"></div><button class="s" onclick="show('shop')">← Back</button></section>
 
  <section id="v-admin" class="hid"><h2>Admin Dashboard</h2>
+  <div id="statbox"></div>
   <div class="two">
    <div class="panel"><b id="pt">Add product</b>
     <input id="pn" placeholder="Product name"><input id="pp" type="number" min="0" placeholder="Price (₦)">
@@ -257,6 +268,12 @@ body.in .hero{display:none}
 <div class="fbottom"><div>© <span id="yr"></span> DeeBlaq’s Market. All rights reserved.</div>
  <div>Digital Accounts Marketplace &amp; Online Services</div>
  <div class="links"><a href="#" onclick="nav('policy');return false">Policy</a><a href="#" onclick="nav('terms');return false">Terms</a><a href="#" onclick="nav('faq');return false">FAQ</a><a href="#" onclick="nav('support');return false">Support</a></div></div></footer>
+<nav id="bnav" aria-label="Main navigation">
+ <button id="bn-home" class="on" onclick="nav('home')"><span class="ni">🏠</span>Home</button>
+ <button id="bn-dash" onclick="nav('dash')"><span class="ni">📊</span>Dashboard</button>
+ <button id="bn-orders" onclick="nav('orders')"><span class="ni">📦</span>Orders</button>
+ <button id="bn-wallet" onclick="nav('wallet')"><span class="ni">₦</span>Wallet</button>
+</nav>
 <a id="fb-tg" class="fab hid" href="#" target="_blank" rel="noopener" aria-label="Chat on Telegram"><svg viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></a>
 <a id="fb-wa" class="fab" href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg viewBox="0 0 24 24"><path d="M12.04 2a9.93 9.93 0 0 0-8.5 15.03L2 22l5.1-1.5A9.94 9.94 0 1 0 12.04 2zm0 18.2a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-3.02.88.9-2.94-.2-.31a8.2 8.2 0 1 1 6.8 3.69zm4.5-6.14c-.25-.12-1.46-.72-1.69-.8-.23-.09-.39-.12-.56.12-.16.25-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.04-.38-1.98-1.22-.73-.65-1.23-1.46-1.37-1.71-.14-.25-.02-.38.1-.5.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07s.89 2.4 1.01 2.56c.12.17 1.75 2.67 4.23 3.74.59.25 1.05.4 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.2-.58.2-1.07.14-1.18-.06-.1-.23-.16-.48-.29z"/></svg></a>
 <button id="theme" onclick="toggleTheme()" aria-label="Switch dark or light mode">🌙</button>
@@ -287,8 +304,25 @@ let _ld=0,_lt=null;
 function loaderStart(msg){_ld++;const on=()=>{$('ld-msg').textContent=msg||'';$('loader').classList.add('on')};if(msg){clearTimeout(_lt);on()}else if(_ld===1&&!$('loader').classList.contains('on')){_lt=setTimeout(on,250)}}
 function loaderEnd(){_ld=Math.max(0,_ld-1);if(_ld===0){clearTimeout(_lt);$('loader').classList.remove('on')}}
 const go=async(f,ok,msg)=>{loaderStart(msg);try{await f();if(ok)toast(ok)}catch(e){toast(e.message)}finally{loaderEnd()}};
-const VIEWS=['shop','auth','cart','pay','wallet','orders','admin'];
-function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);if(v==='pay')prepPay();if(v==='wallet'||v==='admin'||v==='orders')loadPrivate();render()}
+const VIEWS=['shop','auth','cart','pay','dash','wallet','orders','admin'];
+function show(v){VIEWS.forEach(x=>$('v-'+x).classList.toggle('hid',x!==v));scrollTo(0,0);
+ const BN={shop:'bn-home',dash:'bn-dash',orders:'bn-orders',wallet:'bn-wallet'};['bn-home','bn-dash','bn-orders','bn-wallet'].forEach(i=>$(i).classList.toggle('on',BN[v]===i));if(v==='pay')prepPay();if(v==='wallet'||v==='admin'||v==='orders'||v==='dash')loadPrivate();render()}
+function dashHtml(){
+ if(!S.me)return `<div class="panel"><b>🔐 Please log in</b><p class="mu">Log in to see your wallet, orders and activity.</p><button onclick="mode('login');show('auth')">🔑 Login</button> <button class="s" onclick="mode('signup');show('auth')">✨ Create account</button></div>`;
+ const p=prof()||{},o=S.ord||[],d=S.dep||[];
+ const spent=o.reduce((a,x)=>a+Number(x.total||0),0),del=o.filter(x=>x.status==='delivered').length,pend=d.filter(x=>x.status==='pending').length;
+ const stat=(n,l)=>`<div class="panel" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)">${n}</div><div class="mu">${l}</div></div>`;
+ const act=(i,l,f)=>`<button class="mrow" style="margin:0" onclick="${f}"><span class="i">${i}</span>${l}</button>`;
+ const recent=o.slice(0,3).map(x=>`<div class="row"><span>${esc((x.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))}<br><span class="mu">${esc(new Date(x.created_at).toLocaleDateString())}</span></span><span>${N(x.total)} <span class="tag">${x.status==='delivered'?'Delivered':'Processing'}</span></span></div>`).join('')||'<p class="mu">No orders yet. Your purchases will show here.</p>';
+ const lastDep=d.slice(0,3).map(x=>`<div class="row"><span>${N(x.amount)} · ${esc(x.reference)}</span><span class="tag">${esc(x.status)}</span></div>`).join('')||'<p class="mu">No deposits yet.</p>';
+ return `<div class="panel"><b>Welcome back${p.first_name?', '+esc(p.first_name):''} 👋</b><br><span class="mu">Here is a quick look at your account.</span></div>
+ <div class="promo"><span class="pt">WALLET BALANCE</span><h3 style="font-size:34px;margin:10px 0 14px">${N(p.balance)}</h3><button onclick="show('wallet')">➕ Add funds →</button></div>
+ <div class="why" style="grid-template-columns:repeat(2,1fr)">${stat(o.length,'Total orders')}${stat(del,'Delivered')}${stat(N(spent),'Total spent')}${stat(pend,'Pending deposits')}</div>
+ ${isAdmin()?`<button class="s" style="width:100%;margin:12px 0 0" onclick="show('admin')">⚙️ Open admin dashboard</button>`:''}
+ <h2>Quick actions</h2>
+ <div class="two">${act('🛍️','Marketplace',"nav('market')")}${act('📱','Phone Numbers',"nav('numbers')")}${act('🚀','Social Boost',"nav('social')")}${act('🛠️','Tools &amp; Subscriptions',"nav('tools')")}${act('📦','My Purchases',"show('orders')")}${act('🎧','Support',"nav('support')")}</div>
+ <h2>Recent orders</h2><div class="panel">${recent}</div>
+ <h2>Recent deposits</h2><div class="panel">${lastDep}</div>`}
 async function loadReviews(){try{const j=await api('/api/reviews');S.R=j.reviews}catch(e){}render()}
 function addR(){go(async()=>{await api('/api/admin/reviews','POST',{name:$('rn').value,message:$('rm').value,rating:$('rr').value});$('rn').value='';$('rm').value='';await loadReviews()},'Feedback added')}
 function delR(id){if(confirm('Delete this feedback?'))go(async()=>{await api('/api/admin/reviews/'+id,'DELETE');await loadReviews()})}
@@ -319,6 +353,7 @@ function nav(x){closeMenu();
  else if(x==='social')goCat('social');
  else if(x==='tools')goCat('tool');
  else if(x==='wallet')show('wallet');
+ else if(x==='dash')show('dash');
  else if(x==='orders')show('orders');
  else if(x==='admin')show('admin');
  else jump({faq:'faq',support:'support',policy:'policy',contact:'contact',terms:'terms'}[x]||'faq')}
@@ -371,12 +406,30 @@ async function loadAO(more){const page=more?S.ordPage+1:1;const j=await api('/ap
 async function loadStock(){const j=await api('/api/admin/stock');S.stock=j.stock}
 async function loadCust(more){const page=more?S.custPage+1:1;const j=await api('/api/admin/customers?page='+page+(S.cq?'&q='+encodeURIComponent(S.cq):''));S.cust=more?S.cust.concat(j.customers):j.customers;S.custPage=page;S.custMore=j.more;S.custTotal=j.total;if(more)render()}
 async function loadPrivate(){if(!S.me)return;try{const [d,o]=await Promise.all([api('/api/deposits'),api('/api/orders')]);S.dep=d.deposits;S.ord=o.orders;
- if(isAdmin()){await Promise.all([loadAP(),loadAD(),loadAO(),loadStock(),loadCust()])}}catch(e){toast(e.message)}render()}
+ if(isAdmin()){await Promise.all([loadAP(),loadAD(),loadAO(),loadStock(),loadCust(),loadStats()])}}catch(e){toast(e.message)}render()}
+async function loadStats(){try{S.stats=await api('/api/admin/stats')}catch(e){S.stats=null;S.statsErr=e.message}}
+function dayLabel(k){try{return new Date(k+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'})}catch(e){return k}}
+function statsHtml(){
+ const s=S.stats;
+ if(!s)return `<div class="panel"><b>📈 Business overview</b><p class="mu">${esc(S.statsErr||'Loading…')}</p><button class="s sm" onclick="go(async()=>{await loadStats();render()})">🔄 Try again</button></div>`;
+ const t=(n,l)=>`<div class="panel" style="margin:0;text-align:center"><div style="font-size:21px;font-weight:800;color:var(--ac)">${n}</div><div class="mu">${l}</div></div>`;
+ const rows=(s.daily||[]).map((d,i)=>`<div class="row"><span>${i===0?'<b>Today</b>':esc(dayLabel(d.date))}</span><b>${N(d.spent)}</b><span class="mu" style="min-width:92px;text-align:right;margin-right:56px">👤 ${d.signups} · 🛒 ${d.orders}</span></div>`).join('');
+ return `<div class="panel"><b>📈 Business overview</b> <button class="s sm" onclick="go(async()=>{await loadStats();render()},'Updated')">🔄 Refresh</button>
+ <p class="mu" style="margin:6px 0 10px">Days are counted in Nigerian time.</p>
+ <div class="why" style="grid-template-columns:repeat(2,1fr)">
+  ${t(s.users.total,'👥 Total users')}${t(s.users.today,'🆕 Joined today')}
+  ${t(s.users.last7,'📅 Joined (7 days)')}${t(N(s.spending.today),'💸 Spent today')}
+  ${t(N(s.spending.total),'💰 Total spent')}${t(s.spending.orders_total,'🛒 Total orders')}
+  ${t(N(s.funds.today),'➕ Funds added today')}${t(N(s.funds.total),'🏦 Funds added (total)')}
+ </div>
+ <h3 style="margin:16px 0 6px">Last 14 days</h3>
+ <p class="mu" style="margin:0 0 6px">Date · amount spent · 👤 new users · 🛒 orders</p>${rows}</div>`}
 async function refresh(){await Promise.all([loadPublic(),loadPrivate(),loadMe()])}
 function render(){
  const rk=S.R.map(r=>r.id).join(',');$('revs').classList.toggle('hid',!S.R.length);
  if(rk!==S._rk){S._rk=rk;let it=[...S.R];while(it.length&&it.length<6)it=it.concat(S.R);const set=it.map(r=>`<div class="rev"><div class="st">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div><p>“${esc(r.message)}”</p><b>${esc(r.name)}</b></div>`).join('');$('revs').innerHTML=S.R.length?`<div class="marq"><div class="track" style="--d:${Math.max(30,it.length*6)}s">${set}${set}</div></div>`:''}
  $('obox').innerHTML=!S.me?'<p>Please <a href="#" onclick="show(\'auth\');return false">log in</a> to see your purchases.</p>':(S.ord.map(o=>{const it=esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '));return `<div class="panel"><b>${it}</b><br><span class="mu">${N(o.total)} · ${esc(new Date(o.created_at).toLocaleDateString())}</span> <span class="tag">${o.status==='delivered'?'Delivered':'Processing'}</span>${o.note?'<br><span class="mu">Your note: '+esc(o.note)+'</span>':''}${o.status==='delivered'?(o.delivery?'<div class="cred"><b>🔑 Your details</b><pre id="cr-'+o.id+'">'+esc(o.delivery)+'</pre><button class="sm" onclick="copyCr(\''+o.id+'\')">📋 Copy</button></div>':'<p class="mu">Delivered. Contact support if you need help.</p>'):(o.delivery?'<div class="cred"><b>🔑 Ready so far</b><pre id="cr-'+o.id+'">'+esc(o.delivery)+'</pre><button class="sm" onclick="copyCr(\''+o.id+'\')">📋 Copy</button></div><p class="mu">We are preparing the rest of your order.</p>':'<p class="mu">We are preparing your order. Your details will appear here once it is delivered.</p>')}</div>`}).join('')||'<p class="mu">No purchases yet.</p>');
+ $('dbox').innerHTML=dashHtml();
  $('more').classList.toggle('hid',!S.more);
  $('catalog').classList.toggle('hid',!S.me);$('gate').classList.toggle('hid',!!S.me);
  $('cc').textContent=Object.values(S.cart).reduce((a,b)=>a+b,0);
@@ -395,6 +448,7 @@ function render(){
 }
 function renderAdmin(){
  if(!$('v-admin').classList.contains('hid')||1){const sel=$('pc').value;$('pc').innerHTML=S.C.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');if(sel)$('pc').value=sel}
+ $('statbox').innerHTML=statsHtml();
  $('pt').textContent=S.edit?'Edit product':'Add product';
  $('stlist').innerHTML=S.stock.map(x=>`<div class="row"><span>${esc(x.name||x.product_id)}${x.plan?' ('+esc(x.plan)+')':''}</span><span class="tag">${x.available} left of ${x.total}</span></div>`).join('')||'<p class="mu">No stock added yet.</p>';
  $('rlist').innerHTML=S.R.map(r=>`<div class="row"><span>${esc(r.name)}: ${esc(r.message)}</span><button class="sm d" onclick="delR('${r.id}')">Delete</button></div>`).join('')||'<p class="mu">None yet.</p>';
