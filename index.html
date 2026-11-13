@@ -239,7 +239,7 @@ body.in .hero{display:none}
   <div class="panel"><b>Deposit requests</b> <button class="s sm" id="dtog" onclick="toggDep()">Show all</button><div id="dlist"></div><button id="dmore" class="s hid" onclick="loadAD(true)">Load more</button></div>
   <div class="panel"><b>Orders</b> <button class="s sm" id="otog" onclick="toggOrd()">Show all</button><div id="olist"></div><button id="omore" class="s hid" onclick="loadAO(true)">Load more</button></div>
   <div class="panel"><b>👥 Customers (<span id="ctotal">0</span>)</b><input id="cq" placeholder="🔍 Search by name, email or phone" oninput="custSearch(this.value)"><div id="custlist"></div><button id="cmore" class="s hid" onclick="loadCust(true)">Load more</button></div>
-  <div class="panel"><b>📦 Auto-delivery stock</b><p class="mu">Add one login per line. When a customer buys, the next unused line is delivered to them automatically. Products with no stock are delivered by hand.</p><p>Adding stock for: <b id="stfor">tap 📦 Stock on a product above</b></p><input id="sl" placeholder="Plan name (only if the product has plans, e.g. 1 month)"><textarea id="sd" rows="4" placeholder="email | password (one item per line)"></textarea><button onclick="addStock()">Add stock</button><div id="stlist"></div></div>
+  <div class="panel"><b>📦 Auto-delivery stock</b><p class="mu">Add one login per line. When a customer buys, the next unused line is delivered to them automatically. Products with no stock are delivered by hand.</p><p>Adding stock for: <b id="stfor">tap 📦 Stock on a product above</b></p><input id="stplan" placeholder="Plan name (only if the product has plans, e.g. 1 month)"><textarea id="sd" rows="4" placeholder="email | password (one item per line)"></textarea><button onclick="addStock()">Add stock</button><div id="stlist"></div></div>
   <div class="panel"><b>Customer feedback</b><p class="mu">Only add real feedback that your customers gave you.</p><input id="rn" placeholder="Customer name"><input id="rm" placeholder="What the customer said"><select id="rr"><option>5</option><option>4</option><option>3</option></select><button onclick="addR()">Add feedback</button><div id="rlist"></div></div>
   <button class="s" onclick="show('shop')">← Back to store</button></section>
 </main>
@@ -352,8 +352,11 @@ async function loadMe(){try{S.me=await api('/api/me')}catch(e){S.me=null;S.tok=n
 function payOnline(){const a=$('pa').value;go(async()=>{const j=await api('/api/payments/start','POST',{amount:a});location.href=j.link})}
 function verifyPay(t){go(async()=>{const j=await api('/api/payments/verify?tx_ref='+encodeURIComponent(t));try{history.replaceState(null,'',location.pathname)}catch(e){}
  toast(j.credited?'Payment received. Your wallet is funded.':(j.status==='approved'?'Wallet already funded.':'Payment status: '+j.status));await loadMe();show('wallet')})}
-async function loadPublic(more){if(!S.me)return;try{if(!more||!S.C.length){const c=await api('/api/categories');S.C=c.categories}
- const page=more===true?S.page+1:1;const j=await api('/api/products?page='+page+(S.cat!=='all'?'&category_id='+encodeURIComponent(S.cat):'')+(S.q?'&q='+encodeURIComponent(S.q):''));
+async function loadPublic(more){if(!S.me)return;try{const needC=!more||!S.C.length;
+ const page=more===true?S.page+1:1;
+ /* categories and products load at the same time, so the shop appears sooner */
+ const [c,j]=await Promise.all([needC?api('/api/categories'):null,api('/api/products?page='+page+(S.cat!=='all'?'&category_id='+encodeURIComponent(S.cat):'')+(S.q?'&q='+encodeURIComponent(S.q):''))]);
+ if(c)S.C=c.categories;
  S.P=page>1?S.P.concat(j.products):j.products;S.page=page;S.more=j.more;S.P.forEach(x=>{S.known[String(x.id)]=x});S.loaded=true}catch(e){toast('Could not reach the store server')}render()}
 function setCat(id){S.cat=String(id);loadPublic()}
 let _t1,_t2,_t3;
@@ -457,7 +460,7 @@ function addC(){const n=$('cn').value.trim();if(n)go(async()=>{await api('/api/a
 function delC(id){if(confirm('Delete category?'))go(async()=>{await api('/api/admin/categories/'+id,'DELETE');await done()})}
 function dep2(id,a){go(async()=>{await api(`/api/admin/deposits/${id}/${a}`,'POST');await Promise.all([loadPrivate(),loadMe()])})}
 function stockFor(id){S.stockFor=String(id);const p=S.AP.find(x=>String(x.id)===String(id));$('stfor').textContent=p?p.name:id;$('stfor').scrollIntoView({behavior:'smooth'})}
-function addStock(){if(!S.stockFor)return toast('Tap 📦 Stock on a product first');go(async()=>{await api('/api/admin/stock','POST',{product_id:S.stockFor,plan:$('sl').value.trim(),lines:$('sd').value});$('sd').value='';await loadPrivate()},'Stock added')}
+function addStock(){if(!S.stockFor)return toast('Tap 📦 Stock on a product first');go(async()=>{await api('/api/admin/stock','POST',{product_id:S.stockFor,plan:$('stplan').value.trim(),lines:$('sd').value});$('sd').value='';await loadPrivate()},'Stock added')}
 function deliv(id){const o=S.aord.find(x=>String(x.id)===String(id));const t=(S.dl[id]!==undefined?S.dl[id]:((o&&o.delivery)||'')).trim();if(!t&&!confirm('Deliver without any details?'))return;go(async()=>{await api(`/api/admin/orders/${id}/deliver`,'PUT',{delivery:t});delete S.dl[id];await loadPrivate()},'Delivered')}
 function copyCr(id){const e=$('cr-'+id);try{navigator.clipboard.writeText(e.textContent).then(()=>toast('Copied')).catch(()=>toast('Could not copy. Hold the text to copy it.'))}catch(x){toast('Could not copy. Hold the text to copy it.')}}
 /* Welcome pop-up: shown after a customer creates an account */
